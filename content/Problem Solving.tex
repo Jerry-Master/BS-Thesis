@@ -234,9 +234,22 @@ Reliability diagrams can be converted into a metric in the same way the ROC was 
     \label{fig:rel2}
 \end{figure}
 
+\subsection{Extending metrics}
+
+I have depicted a clear way of measuring uncertainty calibration in the previous section but it has at least one downside, it is only for binary problems. I'll devote this subsection to a way in which one can extend any binary metric to a multiclass metric. Suppose we have a metric called $M$.  Now, given a multiclass setup one can compute $M^k$, the same metric but considering the class $k$ against the others. By grouping all the other classes into one, the problem is now binary and so we can compute $M$. By averaging all the $M^k$ we get the extension of $M$. For instance, the macro $F_1$ score correspond to doing this to the $F_1$ score with equal weights to all classes. While the weighted $F_1$ score is the weighted average of the individual $F_1$ scores. However, the micro $F_1$ score, which is also called accuracy, does not correspond to the extension of the accuracy, although it is quite close. The extension of the accuracy is in fact $\frac{2}{N} \text{Micro} + \frac{N-2}{N}$ being $N$ the number of classes. The proof is straightforward. If we call $D$ the diagonal of the confusion matrix and $T$ the total sum then
+
+\begin{align}
+    Acc^k &= \frac{a_{kk} + \sum_{i,j \neq k} a_{ij}}{\sum_{i,j}a_{ij}} \\
+    Acc_{extended} &= \frac{1}{N} \sum_{k} Acc^k = \frac{\sum_{k}a_{kk} + \sum_{k} \sum_{i,j\neq k} a_{ij}}{N \sum_{i,j}a_{ij}} \\
+    &= \frac{2D + (N-2) T}{N T} = \frac{2}{N} \text{Micro} + \frac{N-2}{N}
+\end{align}
+
+where the intermediate step can be deduced by counting how many times does each term appears. The diagonal terms appear $N-1$ times while the rest of terms appear $N-2$ times, therefore $\sum_{k} \sum_{i,j\neq k} a_{ij} = D + (N-1)T$, concluding the proof. Surprisingly enough, the extension of the accuracy approaches 1 as the number of classes increases so it is quite a bad metric. In the experiments below, we will be using the extension of the ECE and call it just ECE for simplicity in the multiclass datasets.
+
 \section{Experiments}\label{sec:exp}
 
 Two experiments were carried out to show the usefulness of graph neural networks in the problem of cell detection and another two experiments were made to provide insights about the models involved. Results are in \autoref{sec:results}, this section is only to describe the experiments themselves. 
+
 
 \subsection{GNN vs CNN}
 
@@ -253,135 +266,3 @@ The original Hovernet article restricted their images to having 270x270 pixels. 
 \subsection{Void GNNs}
 
 Finally, the last experiment is about knowing if the extracted features are relevant or not. We distinguish two types of features: morphological and probabilities. The first group is independent from the Hovernet output while the second is not. To see which of them are more important we train the same GNN models with different features. One with all the features, one only with morphological features and another only with probabilities. By comparing the metrics obtained we can discern which set of features is more relevant.
-
-\section{Results}\label{sec:results}
-
-\begin{table}[ht]
-\centering
-\caption{Result of the GNN vs CNN experiment in five different datasets.}
-\begin{tabular}{c|c|c|c|c|}
-  \cline{2-5}
-  & Micro $F_1$ score & Macro $F_1$ score & Weighted $F_1$ score & ECE \\ \hline
-\multicolumn{1}{|c|}{CNN}  &  &  &  &  \\ \hline
-\multicolumn{1}{|c|}{GNN}  &  &  &  &  \\ \hline
-\end{tabular}
-\caption{CoNSeP dataset.}
-
-\vspace{0.5cm}
-
-\begin{tabular}{c|c|c|c|c|}
-  \cline{2-5}
-  & Micro $F_1$ score & Macro $F_1$ score & Weighted $F_1$ score & ECE \\ \hline
-\multicolumn{1}{|c|}{CNN}  &  &  &  &  \\ \hline
-\multicolumn{1}{|c|}{GNN}  &  &  &  &  \\ \hline
-\end{tabular}
-\caption{PanNuke dataset.}
-
-\vspace{0.5cm}
-
-\begin{tabular}{c|c|c|c|c|}
-  \cline{2-5}
-  & Micro $F_1$ score & Macro $F_1$ score & Weighted $F_1$ score & ECE \\ \hline
-\multicolumn{1}{|c|}{CNN}  &  &  &  &  \\ \hline
-\multicolumn{1}{|c|}{GNN}  &  &  &  &  \\ \hline
-\end{tabular}
-\caption{MoNuSAC dataset.}
-
-\vspace{0.5cm}
-
-\begin{tabular}{c|c|c|c|c|}
-  \cline{2-5}
-  & Micro $F_1$ score & Macro $F_1$ score & Weighted $F_1$ score & ECE \\ \hline
-\multicolumn{1}{|c|}{CNN}  &  &  &  &  \\ \hline
-\multicolumn{1}{|c|}{GNN}  &  &  &  &  \\ \hline
-\end{tabular}
-\caption{DigiPatics breast dataset.}
-
-\vspace{0.5cm}
-
-\begin{tabular}{c|c|c|c|c|}
-  \cline{2-5}
-  & Accuracy & $F_1$ score & ROC AUC & ECE \\ \hline
-\multicolumn{1}{|c|}{CNN}  &  &  &  &  \\ \hline
-\multicolumn{1}{|c|}{GNN}  &  &  &  &  \\ \hline
-\end{tabular}
-\caption{DigiPatics lung dataset.}
-\label{tab:gnn-cnn}
-\end{table}
-
-\begin{table}[ht]
-    \centering
-    \caption{Result of the GNN vs XGBoost experiment on two datasets.}
-    \begin{tabular}{c|c|c|c|c|}
-  \cline{2-5}
-  & Micro $F_1$ score & Macro $F_1$ score & Weighted $F_1$ score & ECE \\ \hline
-\multicolumn{1}{|c|}{XGB}  &  &  &  &  \\ \hline
-\multicolumn{1}{|c|}{GNN}  &  &  &  &  \\ \hline
-\end{tabular}
-\caption{DigiPatics breast dataset.}
-
-\vspace{0.5cm}
-
-\begin{tabular}{c|c|c|c|c|}
-  \cline{2-5}
-  & Accuracy & $F_1$ score & ROC AUC & ECE \\ \hline
-\multicolumn{1}{|c|}{XGB}  &  &  &  &  \\ \hline
-\multicolumn{1}{|c|}{GNN}  &  &  &  &  \\ \hline
-\end{tabular}
-\caption{DigiPatics lung dataset.}
-    \label{tab:gnn-xgb}
-\end{table}
-
-\begin{table}[ht]
-    \centering
-    \caption{Result of the Scaling CNNs experiment.}
-    \begin{tabular}{c|c|c|c|c|}
-  \cline{2-5}
-  & Micro $F_1$ score & Macro $F_1$ score & Weighted $F_1$ score & ECE \\ \hline
-\multicolumn{1}{|c|}{270}  &  &  &  &  \\ \hline
-\multicolumn{1}{|c|}{270FT}  &  &  &  &  \\ \hline
-\multicolumn{1}{|c|}{518}  &  &  &  &  \\ \hline
-\multicolumn{1}{|c|}{518FT}  &  &  &  &  \\ \hline
-\end{tabular}
-\caption{DigiPatics breast dataset.}
-
-\vspace{0.5cm}
-
-\begin{tabular}{c|c|c|c|c|}
-  \cline{2-5}
-  & Accuracy & $F_1$ score & ROC AUC & ECE \\ \hline
-\multicolumn{1}{|c|}{270}  &  &  &  &  \\ \hline
-\multicolumn{1}{|c|}{270FT}  &  &  &  &  \\ \hline
-\multicolumn{1}{|c|}{518}  &  &  &  &  \\ \hline
-\multicolumn{1}{|c|}{518FT}  &  &  &  &  \\ \hline
-\end{tabular}
-\caption{DigiPatics lung dataset.}
-    \label{tab:scaling}
-\end{table}
-
-\begin{table}[ht]
-    \centering
-    \caption{Result of the Void GNNs experiment on two datasets.}
-    \begin{tabular}{c|c|c|c|c|}
-  \cline{2-5}
-  & Micro $F_1$ score & Macro $F_1$ score & Weighted $F_1$ score & ECE \\ \hline
-\multicolumn{1}{|c|}{Full}  &  &  &  &  \\ \hline
-\multicolumn{1}{|c|}{Probabilities}  &  &  &  &  \\ \hline
-\multicolumn{1}{|c|}{Morphological}  &  &  &  &  \\ \hline
-\multicolumn{1}{|c|}{Void}  &  &  &  &  \\ \hline
-\end{tabular}
-\caption{DigiPatics breast dataset.}
-
-\vspace{0.5cm}
-
-\begin{tabular}{c|c|c|c|c|}
-  \cline{2-5}
-  & Accuracy & $F_1$ score & ROC AUC & ECE \\ \hline
-\multicolumn{1}{|c|}{Full}  &  &  &  &  \\ \hline
-\multicolumn{1}{|c|}{Probabilities}  &  &  &  &  \\ \hline
-\multicolumn{1}{|c|}{Morphological}  &  &  &  &  \\ \hline
-\multicolumn{1}{|c|}{Void}  &  &  &  &  \\ \hline
-\end{tabular}
-\caption{DigiPatics lung dataset.}
-    \label{tab:void-gnn}
-\end{table}
