@@ -1,0 +1,284 @@
+\chapter{Results}
+\section{Quantitative analysis}\label{sec:results}
+
+In what follows there will be four tables per section showing the results of each experiment for four different datasets. CoNSeP and MoNuSAC datasets are available online and more general, while DigiPatics breast and DigiPatics lung  are private datasets designed with a more specific goal in mind. Also, at every table the best results will be showcased in bold.
+
+\subsection{GNN vs CNN}
+
+This is the main experiment of my thesis. It showcases if using graphs improves over not using them. For two out of the three multiclass datasets it do improves. Moreover it also lowers the ECE, showing it is not only predicting better but is better calibrated. Nonetheless, the remaining dataset poses a question. Why is not working there? Two possible reasons. On the one hand, it is a small dataset with less that 30 images for training and it has 7 classes. This makes the creation of structures quite unusual, cells are more disperse in space not forming groups. And for those that do make groups, there are few sample for the algorithm to learn about it. On the other hand, it may also be that the model is overfitting. It is possible that the probabilities given to the GNN correlate with the target label more in the training that in the test set, making the model learn some patterns that are wrong. Since the other two datasets have more that 100 images, we deem proper to assume that GNNs start to outperform CNNs when provided with sufficiently enough data. Another remarkable property is that even though GNNs are worse in the consep dataset overall, they have a lower ECE, meaning they are still better calibrated.
+
+\begin{table}[ht]
+\centering
+\caption{Result of the GNN vs CNN experiment.}
+\begin{tabular}{c|c|c|c|c|}
+  \cline{2-5}
+  & Micro $F_1$ score ($\uparrow$) & Macro $F_1$ score ($\uparrow$) & Weighted $F_1$ score ($\uparrow$) & ECE ($\downarrow$) \\ \hline
+\multicolumn{1}{|c|}{CNN}  & \textbf{71.11\%} & \textbf{54.06\%} & \textbf{70.39\%} & 0.0680 \\ \hline
+\multicolumn{1}{|c|}{GNN}  & 64.44\% & 47.87\% & 61.42\% & \textbf{0.0539} \\ \hline
+\end{tabular}
+\caption{CoNSeP dataset.}
+
+\vspace{0.5cm}
+
+
+\begin{tabular}{c|c|c|c|c|}
+  \cline{2-5}
+  & Micro $F_1$ score ($\uparrow$) & Macro $F_1$ score ($\uparrow$) & Weighted $F_1$ score ($\uparrow$) & ECE ($\downarrow$) \\ \hline
+\multicolumn{1}{|c|}{CNN}  & 82.06 \% & 68.76\% & 82.34\% & 0.0774 \\ \hline
+\multicolumn{1}{|c|}{GNN}  & \textbf{88.71\%} & \textbf{69.72\%} & \textbf{89.05\%} & \textbf{0.0251}  \\ \hline
+\end{tabular}
+\caption{MoNuSAC dataset.}
+
+\vspace{0.5cm}
+
+\begin{tabular}{c|c|c|c|c|}
+  \cline{2-5}
+  & Micro $F_1$ score ($\uparrow$) & Macro $F_1$ score ($\uparrow$) & Weighted $F_1$ score ($\uparrow$) & ECE ($\downarrow$) \\ \hline
+\multicolumn{1}{|c|}{CNN}  & 65.12\% & 40.55\% & 66.38\% & 0.3243 \\ \hline
+\multicolumn{1}{|c|}{GNN}  & \textbf{70.47\%} & \textbf{42.53\%} & \textbf{71.13\%} & \textbf{0.2501} \\ \hline
+\end{tabular}
+\caption{DigiPatics breast dataset.}
+
+\vspace{0.5cm}
+
+\begin{tabular}{c|c|c|c|c|}
+  \cline{2-5}
+  & Accuracy & $F_1$ score & ROC AUC & ECE \\ \hline
+\multicolumn{1}{|c|}{CNN}  &  &  &  &  \\ \hline
+\multicolumn{1}{|c|}{GNN}  &  &  &  &  \\ \hline
+\end{tabular}
+\caption{DigiPatics lung dataset.}
+\label{tab:gnn-cnn}
+\end{table}
+
+\newpage
+\subsection{GNN vs XGBoost}
+
+In the first experiment it was shown that GNNs outperform CNNs in some scenarios. But why? Is it due to the relations among cells or due to stacking another classifier on top of the CNN? In the former we should expect GNN to also outperform a node-only method like XGBoost. If it is the latter, then XGBoost should win. As we can see here, the answer is not crystal clear. In some cases it is better to use GNNs and in others it is not. In order to further elucidate when is the case in advance to training the models, the qualitative analysis will help give some insight. Looking at individual images will provide some keys about when graphs are a good fit.
+
+\begin{table}[ht]
+    \centering
+    \caption{Result of the GNN vs XGBoost experiment.}
+    \begin{tabular}{c|c|c|c|c|}
+  \cline{2-5}
+  & Micro $F_1$ score ($\uparrow$) & Macro $F_1$ score ($\uparrow$) & Weighted $F_1$ score ($\uparrow$) & ECE ($\downarrow$) \\ \hline
+\multicolumn{1}{|c|}{XGB}  & \textbf{71.54\%} & \textbf{51.64\%} & \textbf{69.87\%} & \textbf{0.0320} \\ \hline
+\multicolumn{1}{|c|}{GNN}  & 64.44\% & 47.87\% & 61.42\% & 0.0539  \\ \hline
+\end{tabular}
+\caption{CoNSeP dataset.}
+
+\vspace{0.5cm}
+
+\begin{tabular}{c|c|c|c|c|}
+  \cline{2-5}
+  & Micro $F_1$ score ($\uparrow$) & Macro $F_1$ score ($\uparrow$) & Weighted $F_1$ score ($\uparrow$) & ECE ($\downarrow$) \\ \hline
+\multicolumn{1}{|c|}{XGB}  & 85.23\% & \textbf{76.09\%} & 85.20\% & 0.0449 \\ \hline
+\multicolumn{1}{|c|}{GNN}  & \textbf{88.71\%} & 69.72\% & \textbf{89.05\%} & \textbf{0.0251} \\ \hline
+\end{tabular}
+\caption{MoNuSAC dataset.}
+
+\vspace{0.5cm}
+
+\begin{tabular}{c|c|c|c|c|}
+  \cline{2-5}
+  & Micro $F_1$ score ($\uparrow$) & Macro $F_1$ score ($\uparrow$) & Weighted $F_1$ score ($\uparrow$) & ECE ($\downarrow$) \\ \hline
+\multicolumn{1}{|c|}{XGB}  & \textbf{78.51\%} & \textbf{47.36\%} & \textbf{79.78\%} & 0.2502   \\ \hline
+\multicolumn{1}{|c|}{GNN}  & 70.47\% & 42.53\% & 71.13\% & \textbf{0.2501}   \\ \hline
+\end{tabular}
+\caption{DigiPatics breast dataset.}
+
+\vspace{0.5cm}
+
+\begin{tabular}{c|c|c|c|c|}
+  \cline{2-5}
+  & Accuracy & $F_1$ score & ROC AUC & ECE \\ \hline
+\multicolumn{1}{|c|}{XGB}  &  &  &  &  \\ \hline
+\multicolumn{1}{|c|}{GNN}  &  &  &  &  \\ \hline
+\end{tabular}
+\caption{DigiPatics lung dataset.}
+    \label{tab:gnn-xgb}
+\end{table}
+
+\newpage
+\subsection{Scaling CNNs}
+
+Deleting last layer weights and retraining can give better performance, as shown below in \autoref{tab:consep-scaling}. 270FT performs better than 270 and 518FT better than 518 for the CoNSeP dataset. This aligns perfectly with the results from \cite{zhou2022fortuitous}. They observe that reinitialising weights and retraining can boost performance. In our setup this translates to fine-tuning a model in the same dataset it was pretrained. Also, you may have noticed that the metrics for 518FT are slightly different than those in the GNN vs CNN experiment even though they are the same model. That is because we trained the same model twice converging to slightly different checkpoints. I provide both metrics to showcase that the ordering is the same using either of both metrics, thus proving training is sufficiently stable.
+
+Same result is obtained for MoNuSAC dataset. Fine-tuning the checkpoint trained on CoNSeP helps obtain better results when applied as initialisation for the models trained on MoNuSAC dataset which comes from a totally different distribution. The features learned by the encoder seems to generalise well to this other dataset. However, the results in the breast dataset differ from the ones in the CoNSeP and MoNuSAC datasets. In that case using a pretrained checkpoint didn't perform well at neither resolution. This may be because the local minima found for the CoNSeP dataset is far away from the nearest minima in the DigiPatics breast dataset, making a random initialisation a better method. 
+
+Another remarkable fact is that using a field of view of 518 pixels instead of 270 gives better metrics no matter the initialisation nor the dataset. We would have liked to further try a bigger field of view. But training the 518 models required more than 20 GB of GPU VRAM. Scaling to 1030x1030 images would require near 80 GB of GPU VRAM, which is only feasible using A100 or H100, which cost more than 10000€. Using CPU offloading was also not an option since that technique trades memory for time, typically increasing by 100 the time required. The models required around 4 hours to train. This means one experiment may take up to 2 weeks with a bigger field of view, which is clearly prohibitive. With our resources, 518 was the maximum we could achieve.
+
+\begin{table}[ht]
+    \centering
+    \caption{Result of the Scaling CNNs experiment.}
+    \begin{tabular}{c|c|c|c|}
+  \cline{2-4}
+  & Micro $F_1$ score ($\uparrow$) & Macro $F_1$ score ($\uparrow$) & Weighted $F_1$ score ($\uparrow$) \\ \hline
+\multicolumn{1}{|c|}{270}  & 54.20\% & 36.21\% & 54.62\% \\ \hline
+\multicolumn{1}{|c|}{270FT}  & 66.73\% & 49.01\% & 65.96\% \\ \hline
+\multicolumn{1}{|c|}{518}  & 56.75\% & 37.76\% & 59.45\% \\ \hline
+\multicolumn{1}{|c|}{518FT}  & \textbf{71.02\%} & \textbf{53.83\%} & \textbf{70.52\%} \\ \hline
+\end{tabular}
+\caption{CoNSeP dataset.}
+\label{tab:consep-scaling}
+
+
+\vspace{0.5cm}
+
+\begin{tabular}{c|c|c|c|}
+  \cline{2-4}
+  & Micro $F_1$ score ($\uparrow$) & Macro $F_1$ score ($\uparrow$) & Weighted $F_1$ score ($\uparrow$)  \\ \hline
+\multicolumn{1}{|c|}{270}  & 76.46\% & 56.20\% & 77.04\% \\ \hline
+\multicolumn{1}{|c|}{270FT}  & 77.97\% & 62.84\% & 77.93\% \\ \hline
+\multicolumn{1}{|c|}{518}  & 78.57\% & 58.64\% & 79.61\% \\ \hline
+\multicolumn{1}{|c|}{518FT}  & \textbf{82.02\%} & \textbf{70.40\%} & \textbf{82.09\%} \\ \hline
+\end{tabular}
+\caption{MoNuSAC dataset.}
+
+\vspace{0.5cm}
+
+\begin{tabular}{c|c|c|c|c|}
+  \cline{2-4}
+  & Micro $F_1$ score ($\uparrow$) & Macro $F_1$ score ($\uparrow$) & Weighted $F_1$ score ($\uparrow$) \\ \hline
+\multicolumn{1}{|c|}{270}  & 70.04\% & 38.22\% & 68.43\%  \\ \hline
+\multicolumn{1}{|c|}{270FT}  & 48.55\% & 21.57\% & 34.44\% \\ \hline
+\multicolumn{1}{|c|}{518}  & \textbf{72.36\%} & \textbf{45.64\%} & \textbf{75.80\%} \\ \hline
+\multicolumn{1}{|c|}{518FT}  & 68.78\% & 43.27\% & 71.58\% \\ \hline
+\end{tabular}
+\caption{DigiPatics breast dataset.}
+
+\vspace{0.5cm}
+
+\begin{tabular}{c|c|c|c|c|}
+  \cline{2-5}
+  & Accuracy & $F_1$ score & ROC AUC & ECE \\ \hline
+\multicolumn{1}{|c|}{270}  &  &  &  &  \\ \hline
+\multicolumn{1}{|c|}{270FT}  &  &  &  &  \\ \hline
+\multicolumn{1}{|c|}{518}  &  &  &  &  \\ \hline
+\multicolumn{1}{|c|}{518FT}  &  &  &  &  \\ \hline
+\end{tabular}
+\caption{DigiPatics lung dataset.}
+    \label{tab:scaling}
+\end{table}
+
+\newpage
+\subsection{Void GNNs}
+
+Another way of seeing if the good performance of graphs is due to the information in the edges or in the attributes of the nodes, is to train the graphs models with and without the attributes. If there is no performance difference, then edges are relevant. Otherwise, it is less relevant. Moreover, there is a set of attributes that depends on the layers behind, the probabilities. To discern if GNNs are working cause they are stacked above or because there is a graph structure we also train the models with and without the probabilities. We observe that in the dataset that XGBoost did not outperform GNNs the GNN trained with no features do in fact perform better than the model with features. And also, using probabilities not only did not improve but worsened the result. However, in the two datasets that XGBoost did give better results we can see that using probabilities gives a benefit over using other types of features. This tells us that MoNuSAC has more structure than CoNSeP and DigiPatics breast datasets. In DigiPatics breast GNNs gave better results than CNN but it was due to stacking. For MoNuSAC it was because the graph is indeed a good way of modelling the problem. 
+
+\begin{table}[ht]
+    \centering
+    \caption{Result of the Void GNNs experiment.}
+    \begin{tabular}{c|c|c|c|c|}
+  \cline{2-5}
+  & Micro $F_1$ score ($\uparrow$) & Macro $F_1$ score ($\uparrow$) & Weighted $F_1$ score ($\uparrow$) & ECE ($\downarrow$) \\ \hline
+\multicolumn{1}{|c|}{Full}  & 64.44\% & \textbf{47.87\%} & 61.42\% & 0.0539  \\ \hline
+\multicolumn{1}{|c|}{Probabilities}  & \textbf{64.93\%} & 47.37\% & \textbf{61.63\%} & \textbf{0.0494} \\ \hline
+\multicolumn{1}{|c|}{Morphological}  & 52.11\% & 29.42\% & 48.19\% & 0.0582 \\ \hline
+\multicolumn{1}{|c|}{Void}  & 47.97\% & 28.71\% & 47.44\% & 0.0653 \\ \hline
+\end{tabular}
+\caption{CoNSeP dataset.}
+
+\vspace{0.5cm}
+
+\begin{tabular}{c|c|c|c|c|}
+  \cline{2-5}
+  & Micro $F_1$ score ($\uparrow$) & Macro $F_1$ score ($\uparrow$) & Weighted $F_1$ score ($\uparrow$) & ECE ($\downarrow$) \\ \hline
+\multicolumn{1}{|c|}{Full}  & 88.71\% & 69.72\% & 89.05\% & 0.0251  \\ \hline
+\multicolumn{1}{|c|}{Probabilities}  & 82.59\% & \textbf{73.43\%} & 82.60\% & 0.0784 \\ \hline
+\multicolumn{1}{|c|}{Morphological}  & \textbf{92.01\%} & 69.83\% & \textbf{92.02\%} & \textbf{0.0405} \\ \hline
+\multicolumn{1}{|c|}{Void}  & 90.60\% & 71.00\% & 90.61\% & 0.0470 \\ \hline
+\end{tabular}
+\caption{MoNuSAC dataset.}
+
+\vspace{0.5cm}
+
+\begin{tabular}{c|c|c|c|c|}
+  \cline{2-5}
+  & Micro $F_1$ score ($\uparrow$) & Macro $F_1$ score ($\uparrow$) & Weighted $F_1$ score ($\uparrow$) & ECE ($\downarrow$) \\ \hline
+\multicolumn{1}{|c|}{Full}  & \textbf{70.47\%} & \textbf{42.53\%} & \textbf{71.13\%} & 0.2501  \\ \hline
+\multicolumn{1}{|c|}{Probabilities}  & 67.94\% & 40.83\% & 68.91\% & 0.2666 \\ \hline
+\multicolumn{1}{|c|}{Morphological}  & 63.05\% & 30.48\% & 61.26\% & 0.2676 \\ \hline
+\multicolumn{1}{|c|}{Void}  & 68.31\% & 36.03\% & 67.90\% & \textbf{0.2358} \\ \hline
+\end{tabular}
+\caption{DigiPatics breast dataset.}
+
+\vspace{0.5cm}
+
+\begin{tabular}{c|c|c|c|c|}
+  \cline{2-5}
+  & Accuracy & $F_1$ score & ROC AUC & ECE \\ \hline
+\multicolumn{1}{|c|}{Full}  &  &  &  &  \\ \hline
+\multicolumn{1}{|c|}{Probabilities}  &  &  &  &  \\ \hline
+\multicolumn{1}{|c|}{Morphological}  &  &  &  &  \\ \hline
+\multicolumn{1}{|c|}{Void}  &  &  &  &  \\ \hline
+\end{tabular}
+\caption{DigiPatics lung dataset.}
+    \label{tab:void-gnn}
+\end{table}
+
+\newpage
+\subsection{CNNs metrics in detail}
+
+In all the experiments above I provided metrics only for 1-1 matchings of cells. That is a fair way of comparing CNN to GNN since GNN can only improve predictions on 1-1 matchings. However, it does not show the full picture. The CNN can miss cells or predict cells that do not exist. For that reason I here provide the same metrics as above but adding one extra class: the background. It never has true positives, only false positives and false negatives. Thus, it will almost always be worse than the metrics above given. For a counter example on when it is not worse, look at the next paragraph. The bigger the gap, the more cells it is missing or incorrectly predicting. Nevertheless, such gap does not alter any of the conclusions. In this project we did not try to narrow this gap because we consider the classification problem to be inherently more difficult than the segmentation problem. We believe improving the segmentation problem is simply a matter of more data and bigger models. If you think about it, you can detect cells without formal knowledge, it is just a matter of geometry and color. But recognising where are the tumours located? That requires more than 10 years of training to humans, and even in that case experts still have doubts. Therefore we directed our efforts toward improving the classification, not the segmentation.
+
+You may have noticed that in the DigiPatics breast dataset the macro $F_1$ score did not worsen when adding the background. It seems counterintuitive since we are adding a class with no true positives, only false positives and false negatives. But, the key to why this happens is purely technical. This is the global confusion matrix for the test set in the DigiPatics breast dataset:
+
+\[
+\begin{bmatrix}
+0 & 95 & 151 & 116 & 9 & 425 \\
+26 & 100 & 14 & 1 & 0 & 64 \\
+518 & 752 & 1136 & 819 & 17 & 445 \\
+25 & 6.0 & 54 & 336 & 28 & 5 \\
+0 & 0 & 0 & 0 & 0 & 0 \\
+509 & 48 & 18 & 3 & 1 & 2672
+\end{bmatrix}
+\]
+
+\noindent Why is this matrix problematic? Well, there is one class which does not appear at all in the ground truth. The reason why this causes the problem is because the two macro $F_1$ scores are computed differently. The "With Background" metrics are computed using the confusion matrix and a custom function I designed. The "Without Background" metrics are computed using pairs of labels and the sklearn f1\_score function. Both functions are coded properly, that is not the problem. But in my implementation of the metric, I coded a function that estimates the number of classes based on the classes with support in the ground truth, and also ignoring the zero class. However, the sklearn function estimates the number of classes as the class with the maximum label. This is making one metric being divided by 4 and another being divided by 5. If we adjust the sklearn given metric to consider 4 classes instead of 5 we get a macro $F_1$ score of $50.69\%$ which is bigger than $44.56\%$ as expected. The reason I don't adjust this metric in the other tables is because the GNN methods are also evaluated using the sklearn function so the comparison is fair as it is. I just left the metrics below unchanged to showcase how a simple decision in design of an algorithm or method can affect the final conclusions, even creating mathematically impossible situations.
+
+\begin{table}[ht]
+\centering
+\caption{Hovernet evaluated with and without background in four different datasets.}
+\begin{tabular}{c|c|c|c|}
+  \cline{2-4}
+  & Micro $F_1$ score & Macro $F_1$ score & Weighted $F_1$ score \\ \hline
+\multicolumn{1}{|c|}{With Background}  & 48.38\% & 49.58\% & 57.84\% \\ \hline
+\multicolumn{1}{|c|}{Without Background}  & \textbf{71.11\%} & \textbf{54.06\%} & \textbf{70.39\%} \\ \hline
+\end{tabular}
+\caption{CoNSeP dataset.}
+
+\vspace{0.5cm}
+
+
+\begin{tabular}{c|c|c|c|}
+  \cline{2-4}
+  & Micro $F_1$ score & Macro $F_1$ score & Weighted $F_1$ score \\ \hline
+\multicolumn{1}{|c|}{With Background}  & 53.29\% & 43.95\% & 67.67\% \\ \hline
+\multicolumn{1}{|c|}{Without Background}  & \textbf{82.06\%} & \textbf{68.76\%} & \textbf{82.34\%} \\ \hline
+\end{tabular}
+\caption{MoNuSAC dataset.}
+
+\vspace{0.5cm}
+
+\begin{tabular}{c|c|c|c|}
+  \cline{2-4}
+  & Micro $F_1$ score & Macro $F_1$ score & Weighted $F_1$ score \\ \hline
+\multicolumn{1}{|c|}{With Background}  & 50.57\% & \textbf{44.56\%} & 57.89\% \\ \hline
+\multicolumn{1}{|c|}{Without Background}  & \textbf{65.12\%} & 40.55\% & \textbf{66.38\%}  \\ \hline
+\end{tabular}
+\caption{DigiPatics breast dataset.}
+
+\vspace{0.5cm}
+
+\begin{tabular}{c|c|c|c|c|c|c|c|}
+  \cline{2-7}
+  & Accuracy & $F_1$ score & ROC AUC & Micro $F_1$ & Macro $F_1$ & Weighted $F_1$ \\ \hline
+\multicolumn{1}{|c|}{With Background}  & NA & NA & NA &  &  & \\ \hline
+\multicolumn{1}{|c|}{Without Background}  &  &  &  & NA & NA & NA \\ \hline
+\end{tabular}
+\caption{DigiPatics lung dataset.}
+\label{tab:gnn-cnn}
+\end{table}
+
+\section{Qualitative analysis}
