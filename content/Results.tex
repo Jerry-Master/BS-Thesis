@@ -332,16 +332,19 @@ To illustrate how diverse is this concrete dataset, I will show another example 
   \begin{subfigure}[b]{0.45\textwidth}
     \includegraphics[width=\textwidth]{imgs/qual/consep/gt2.overlay.png}
     \caption{GT}
+    \label{fig:consep-gt2}
   \end{subfigure}
   \hfill
   \begin{subfigure}[b]{0.45\textwidth}
     \includegraphics[width=\textwidth]{imgs/qual/consep/hov2.png}
     \caption{Hovernet}
+    \label{fig:consep-hov2}
   \end{subfigure}
   \\
   \begin{subfigure}[b]{0.45\textwidth}
     \includegraphics[width=\textwidth]{imgs/qual/consep/gcn-full2.png}
     \caption{GCN}
+    \label{fig:consep-gcn2}
   \end{subfigure}
   \hfill
   \begin{subfigure}[b]{0.45\textwidth}
@@ -376,14 +379,17 @@ To end with the analysis of this dataset, I will display another image where cel
     \begin{subfigure}[b]{0.3\textwidth}
     \includegraphics[width=\textwidth]{imgs/qual/consep/gt3.overlay.png}
     \caption{GT}
+    \label{fig:consep-gt2}
   \end{subfigure}
   \begin{subfigure}[b]{0.3\textwidth}
     \includegraphics[width=\textwidth]{imgs/qual/consep/hov3.png}
     \caption{Hovernet}
+    \label{fig:consep-hov2}
   \end{subfigure}
   \begin{subfigure}[b]{0.3\textwidth}
     \includegraphics[width=\textwidth]{imgs/qual/consep/gcn-full3.png}
     \caption{GCN}
+    \label{fig:consep-gcn2}
   \end{subfigure}
     \caption{Last example of CoNSeP database. It mixes different cell types which makes it difficult for the GNN to work properly.}
     \label{fig:consep-qual3}
@@ -398,12 +404,15 @@ In previous sections I have stated that this dataset was a good example of where
     \centering
     \begin{subfigure}[b]{0.3\textwidth}
     \includegraphics[width=\textwidth]{imgs/qual/monusac/gt1.overlay.png}
+    \label{fig:monusac-gt1}
   \end{subfigure}
   \begin{subfigure}[b]{0.3\textwidth}
     \includegraphics[width=\textwidth]{imgs/qual/monusac/gt2.overlay.png}
+    \label{fig:monusac-gt2}
   \end{subfigure}
   \begin{subfigure}[b]{0.3\textwidth}
     \includegraphics[width=\textwidth]{imgs/qual/monusac/gt3.overlay.png}
+    \label{fig:monusac-gt3}
   \end{subfigure}
     \caption{Three examples with their ground truth overlayed on top.}
     \label{fig:monusac-ex}
@@ -504,12 +513,15 @@ Let's start the qualitative analysis of this section with a question. Given the 
     \centering
     \begin{subfigure}[b]{0.3\textwidth}
     \includegraphics[width=\textwidth]{imgs/qual/breast/gt1.overlay.png}
+    \label{fig:breast-gt1}
   \end{subfigure}
   \begin{subfigure}[b]{0.3\textwidth}
     \includegraphics[width=\textwidth]{imgs/qual/breast/gt2.overlay.png}
+    \label{fig:breast-gt2}
   \end{subfigure}
   \begin{subfigure}[b]{0.3\textwidth}
     \includegraphics[width=\textwidth]{imgs/qual/breast/gt3.overlay.png}
+    \label{fig:breast-gt3}
   \end{subfigure}
     \caption{Three examples with their ground truth overlayed on top.}
     \label{fig:breast-ex}
@@ -670,3 +682,64 @@ To finish this section I will compare graph convolution to graph attention. Grap
 
 \newpage
 \subsection{DigiPatics lung}
+
+I was personally involved in the creation of this dataset. This means that I know some information that is normally not documented in these databases. When labelling, the physician sometimes decided entirely based on information not present on the image itself. Or information present in the image but very subtle. One such case is the cilium. Cells near cilium are never tumoural but can be very similar to tumoural cells. In all the experiments we made, including those that are not documented here, the specific image in \autoref{fig:lung-cilium} was always predicted as tumoural. However, our best performing graph model somehow solved that problem. It is possible that it has been pure luck. But it is still remarkable because we didn't have such luck with Hovernet.
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[b]{0.3\textwidth}
+    \includegraphics[width=\textwidth]{imgs/qual/lung/cilio-gt.overlay.png}
+    \caption{GT}
+  \end{subfigure}
+  \begin{subfigure}[b]{0.3\textwidth}
+    \includegraphics[width=\textwidth]{imgs/qual/lung/cilio-hov.png}
+    \caption{Hovernet}
+  \end{subfigure}
+  \begin{subfigure}[b]{0.3\textwidth}
+    \includegraphics[width=\textwidth]{imgs/qual/lung/cilio-no-prior.png}
+    \caption{GCN without probabilities}
+  \end{subfigure}
+    \caption{Example of an image containing cilium together with Hovernet and GNN predictions.}
+    \label{fig:lung-cilium}
+\end{figure}
+
+Another special case is shown in \autoref{fig:lung-context}. When labelling this specific patch, Irene needed a few minutes to notice that it was not tumoural at all. And she discovered that by looking at the whole slide image. I was told that with that image alone it was not possible to be 100\% sure that all the cells were not tumoural. And we can see that both Hovernet and the GNN fail in this case. The cells marked in blue look so similar to tumoural cells that the models classify them as that because they lack the information needed to discard them from being tumoural.
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[b]{0.3\textwidth}
+    \includegraphics[width=\textwidth]{imgs/qual/lung/context-gt.overlay.png}
+    \caption{GT}
+  \end{subfigure}
+  \begin{subfigure}[b]{0.3\textwidth}
+    \includegraphics[width=\textwidth]{imgs/qual/lung/context-hov.png}
+    \caption{Hovernet}
+  \end{subfigure}
+  \begin{subfigure}[b]{0.3\textwidth}
+    \includegraphics[width=\textwidth]{imgs/qual/lung/context-no-prior.png}
+    \caption{GCN without probabilities}
+  \end{subfigure}
+    \caption{Example of a patch that required extra context to label together with Hovernet and GNN predictions.}
+    \label{fig:lung-context}
+\end{figure}
+\newpage
+To finish this chapter I will leave a canonical example of when graphs are a good fit. The case depicted in \autoref{fig:lung-val} contains three groups perfectly separated from each other. Two nests of tumoural cells at both sides and in the middle a group of healthy cells. Hovernet struggles to detect some of the tumoural cells from the left and right. Probably because they are small, round and with a low nuclei to cytoplasm ratio, which are the properties typical of non-tumoural cells. But they are indeed tumoural, in part because they are all so close together. The graph network, on the other hand, leverages the fact that they are grouped together and propagates the dominant class of each cluster to all the cells of that cluster, perfectly classifying the whole patch.
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[b]{0.3\textwidth}
+    \includegraphics[width=\textwidth]{imgs/qual/lung/val-gt1.overlay.png}
+    \caption{GT}
+  \end{subfigure}
+  \begin{subfigure}[b]{0.3\textwidth}
+    \includegraphics[width=\textwidth]{imgs/qual/lung/val-hov1.png}
+    \caption{Hovernet}
+  \end{subfigure}
+  \begin{subfigure}[b]{0.3\textwidth}
+    \includegraphics[width=\textwidth]{imgs/qual/lung/val-no-prior1.png}
+    \caption{GCN without probabilities}
+  \end{subfigure}
+    \caption{Another example from the validation dataset where the graph network is clearly better than Hovernet.}
+    \label{fig:lung-val}
+\end{figure}
+
