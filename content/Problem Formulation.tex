@@ -35,10 +35,13 @@ One may also think that the regression problem can be split into patches too. Th
 
 All in all, we chose this way because we believed it was going to give better results and because the doctors preferred that solution over the other for its interpretability.
 
+\section{Data}\label{sec:data}
 
-\section{Data labelling}\label{sec:data}
+Now that we have described the problem as a segmentation and classification one, let's describe the datasets in which it is going to be applied and how they were obtained. The first one and the main focus of the thesis is the DigiPatics lung dataset, it is called like this because it was created under the DigiPatics project \cite{DigiPatics2022} and contains patches of lung WSI. Then, I'll describe another dataset also focused on tumour detection but of another organ, the DigiPatics breast dataset. And at the end I'll explain two more dataset: CoNSeP \cite{hovernet} and MoNuSAC \cite{8880654}. They are two public datasets related to digital pathology and nuclei segmentation and classification as well. 
 
-As stated in the previous section we have access to few WSI but each WSI contains a lot of information. One can extract hundreds of patches from surgical biopsies made by thoracotomy, and even in needle biopsies it is possible to obtain more than two hundred patches. However, those images are of no use without their corresponding labels. To illustrate what we are referring to, look at \autoref{fig:labels} below.
+\subsection{DigiPatics lung dataset}\label{sec:data_lung}
+
+This dataset contains 85 images of 1024 by 1024 pixels referring to Hematoxilin and Eoxin stained WSI. Every patch comes from a WSI of a patient with lung tumour and it is annotated pixel-wise, that is, every pixel is either 0, 1 or 2 depending on whether it belongs to the background, to a healthy cell or to a tumoural cell. To have a better understanding of the problem at hand, look at \autoref{fig:labels} below.
 
 \begin{figure}[ht]
   \centering
@@ -57,13 +60,123 @@ As stated in the previous section we have access to few WSI but each WSI contain
   \label{fig:labels}
 \end{figure}
 
-The ground truth (GT) used to train the models needs to be handcrafted, which is a tedious process. To alleviate the amount of work required, an iterative procedure was designed. In a first step made by David Anglada and Feliu Formosa, the max-tree \cite{maxtree} was used to create rough segmentations of 24 patches that were later reviewed and improved by the students. Those initial labels were used to train Hovernet \cite{hovernet}, explained in detail in \autoref{sec:vision}. Using that newly trained model, 20 more images were annotated and reviewed by me. Then, Hovernet was trained again using those 44 images and used to infer the GT of 41 more patches. Only after carefully correcting all the 85 slices, would the pathologist Irene Sansano Valero start reviewing the dataset. The whole process took around 100 hours of human labour, around 20 hours of GPU computation and 10 hours of expert human labour.
+In order to annotate those images it is first needed to choose which images to label. One can extract hundreds of patches from surgical biopsies made by thoracotomy, and even in needle biopsies it is possible to obtain more than two hundred patches. But labelling those patches is very expensive and so they have to be chosen carefully. One important aspect to take into account is the number of patients at consideration. One thousand labelled images are of no use if they come from only one patient. There is a huge variance across WSI of different patients. For that reason we decided to annotate images from nine different patients. The selection within patient was made based on structures that seem very different from each other so that the dataset captures as much variance as possible.
+
+Once the images were chosen, the annotation can begin. However, labelling manually each image can take days for each image. That is why we followed a semi-automated approach. To alleviate the amount of work required, an iterative procedure was designed. In a first step made by David Anglada and Feliu Formosa, the max-tree \cite{maxtree} was used to create rough segmentations of 24 patches that were later reviewed and improved by the students. Those initial labels were used to train Hovernet \cite{hovernet}, explained in detail in \autoref{sec:vision}. Using that newly trained model, 20 more images were annotated and reviewed by me. Then, Hovernet was trained again using those 44 images and used to infer the GT of 41 more patches. Only after carefully correcting all the 85 patches, would the pathologist Irene Sansano Valero start reviewing the dataset. The whole process took around 100 hours of human labour, 20 hours of GPU computation and 15 hours of expert human labour.
+
+As a side note, this dataset is enough for the research carried out here but is definitely not enough for a production setting. Nine patients is by no means a representative sample. And there are many structures not present in the patches selected. We made our best effort to annotate a dataset that would validate our approach. Having proved its validity it remains to extend the dataset and scale the models in order to achieve a production ready model.
+
+\subsection{DigiPatics breast dataset}\label{sec:data_breast}
+
+Another tumour related dataset is provided by the DigiPatics group. This one was annotated by David Anglada and supervised by pathologist Teresa Soler. It contains 141 images from 4 different patients that had breast cancer. The biopsies were stained with HER2 staining. This time the dataset contains 6 different classes counting the background. I will not dive into much details of this dataset and what represents every class, the only fact I will like to mention is that domain experts on this field and the engineers collaborating with them do not think that group structure is as important here as it is in the case of lung tumours. In fact, experiments described in \autoref{subsec:gnn-xgb} and \autoref{subsec:void-gnn} show that this is the case. In \autoref{fig:mama_ex} you can see an example of the type of images that are in this dataset.
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[b]{0.24\textwidth}
+    \includegraphics[width=\textwidth]{imgs/data/p1.png}
+    \caption{Patient 1}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.24\textwidth}
+    \includegraphics[width=\textwidth]{imgs/data/p2.png}
+    \caption{Patient 2}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.24\textwidth}
+    \includegraphics[width=\textwidth]{imgs/data/p3.png}
+    \caption{Patient 3}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.24\textwidth}
+    \includegraphics[width=\textwidth]{imgs/data/p4.png}
+    \caption{Patient 4}
+  \end{subfigure}
+    \caption{Patches of the four patients that are in this database. Names are omitted for data privacy. As you can observe, images are visually very different from patient to patient even though the same staining is employed in all of them.}
+    \label{fig:mama_ex}
+\end{figure}
+
+\subsection{CoNSeP dataset}\label{sec:data_consep}
+
+The name means colorectal nuclear segmentation and phenotypes. In other words, it is about cell nuclei detection on colorectal adenocarcinoma WSIs. Yet another organ in which we are interested of automatically visualise the cells that are related to a tumour. It uses the same staining as the DigiPatics lung dataset: H\&E. The size of the images is similar: 1000x1000. And it also has many patients: 16 in total. The main difference with the other datasets so far is that it only contains 41 images. Another difference with the lung dataset is that is has 7 classes, without counting the background. Instead of classifying cells as tumour vs non-tumour the authors here decided to provide a more detailed analysis of each cell. In \autoref{fig:consep_ex} you have an example of what are the images it contains. We decided to use this dataset because it was the one used in the Hovernet article although we don't have too much insight on this type of data. The results of the experiments on this dataset seem to prove that graphs neural network are not a good choice for colorectal tissue. Nonetheless, more research is needed to confirm that hypothesis. It remains to ask experts if the group structure is important here and other approaches need to be carried out, like binarising the classes. Since in this thesis I could only talk with lung experts, I couldn't carry those experiments myself. It is left as future research.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{imgs/data/consep.png}
+    \caption{Different examples of the CoNSeP dataset illustrating all the different cells that it contains. Image was taken from the original article \cite{hovernet}.}
+    \label{fig:consep_ex}
+\end{figure}
+
+\subsection{MoNuSAC dataset}\label{sec:data_monusac}
+
+As in previous subsection, the abbreviation has some meaning. It comes from Multi-Organ Nuclei Segmentation and Classification Challenge. This time it is not tumour related but it is still a nuclei segmentation and classification problem so we deemed it interesting to try our method here. The MoNuSAC database contains 294 images from 71 patients. There are several differences with respect to the other three datasets. The first one is the type of classes it has. They are not tumour related, instead cells are classified into four types: epithelial, lymphocite, macrophage and neutrophil. The second difference is the number of organs. In the previous datasets only one tumour was considered at a time. Here we have lung, breast, kidney and prostate. The third and last difference is that the WSI came from 37 hospitals instead of just one. Every WSI was selected from The Cancer Genome Data Portal\footnote{\url{https://portal.gdc.cancer.gov/} Accessed 15th May 2023} and were later labelled. Having such amount of data made this dataset quite interesting to use. It has more variety and many more images than all the datasets previously mentioned. Interestingly enough, using graph neural networks here gives better results than not using them. Experimental results will be discussed in more detailed on \autoref{sec:results}. One technical detail to remark is that images from this dataset have very different aspect ratios and sizes. To simplify the process we just upsampled or downsampled every image into having size 1024x1024 using Lanczos interpolation. An example of the images from this dataset is in \autoref{fig:monusac_ex}.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{imgs/data/monusac.png}
+    \caption{Image extracted from the MoNuSAC article \cite{8880654}. It depicts various images from each of the four organs used in the creation of it.}
+    \label{fig:monusac_ex}
+\end{figure}
 
 \section{Computer vision algorithms}\label{sec:vision}
 
-In this section I will provide a brief survey about the state of the art in segmentations problems and a detailed explanation of Hovernet \cite{hovernet} which is the model used in the first phase of our method.
+In this section I will provide a brief survey about the state of the art in segmentations problems and a detailed explanation of Hovernet \cite{hovernet} which is the model used in the first phase of our method. Prior to diving into specific neural network architectures I will make a quick recap into what a convolutional neural network is. The forward pass of a single neuron from a layer of a neural network can be described as
 
-The first deep learning attempt at biomedical segmentation was made by Olaf Ronneberger et al. \cite{unet}. They proposed an encoder-decoder architecture as shown in \autoref{fig:unet}.
+\begin{equation}
+    a_j = f(\bw^{(j)} \bx + b_j) = f\Big( \big(\sum_{i=1}^n w_i^{(j)} x_i\big) +b_j ) \Big)
+\end{equation}
+
+\noindent where $w^{j}$ is the j-th row of the weight matrix of that layer $W$, $x_i$ is the i-th entry of the input and $b_j$ is the j-th entry of the bias of that layer\footnote{\url{https://atcold.github.io/pytorch-Deep-Learning/en/week02/02-3/} Accessed 15th May 2023}. Here $f$ is any non-linearity to give the network expressivity. Now, a convolutional layer is similar in that it also has neurons that are made of a linear operator applied to the input plus a bias and a non-linearity. However, the operator is different. For a normal neural network, also called multilayer perceptron, the lineal operator can be expressed as $(W \cdot \bx)^{(j)}$ being $\cdot$ the matrix multiplication and $(\cdot)^{(j)}$ denotes the j-th entry of the vector. For a convolutional neural network, the operator is the convolution $(W * \bx)^{(j)}$. In one dimension, if $W = (w_1, w_2, w_3)^T$ is a kernel of dimension 3, then the convolution can be expressed as a matrix multiplication like so\footnote{\url{https://atcold.github.io/pytorch-Deep-Learning/en/week04/04-1/} Accessed 15th May 2023}
+
+\begin{equation}
+    W * \bx = \begin{bmatrix}
+        w_1 & w_2  & w_3  & 0 & 0 & 0 & 0&\cdots  &0\\
+        0 & w_1  & w_2 & w_3  & 0&0&0&\cdots &0\\
+        0 & 0 & w_1 & w_2  & w_3  & 0&0&\cdots &0\\
+        0 & 0 & 0& w_1  & w_2  &w_3 &0&\cdots &0\\
+        0 & 0 & 0& 0 & w_1  &w_2 &w_3 &\cdots &0\\
+        \vdots&&\vdots&&\vdots&&\vdots&&\vdots
+    \end{bmatrix}
+    \begin{bmatrix}
+        x_1\\
+        x_2\\
+        x_3\\
+        x_4\\
+        \vdots\\
+        x_k\\
+        \vdots\\
+        x_n
+    \end{bmatrix}
+\end{equation}
+
+To extend it to 2D data like images, we could still use this matrix definition but it would get quite cumbersome so, instead, a simple formula can be used to describe 2D convolutions.
+
+\begin{equation}
+    (W * \bx) ^{(m,n)} = \sum_{i=-\infty}^{\infty} \sum_{j=-\infty}^{\infty} w^{(m-i, n-j)} \cdot x^{(i,j)}
+\end{equation}
+
+\noindent where the superindex notation denotes pixel coordinates and the weight matrix is centred at $(0,0)$ and has compact support, same as the image, which also has compact support meaning it is only different than zero for a finite amount of coordinates. As you may have noticed, convolutions return images as output. Therefore, we can visualise what a convolutional neural network is doing by looking at the neuron activations, which in this context are called the channels instead of neurons. In \autoref{fig:conv_ex} there is an example of two possible filters that may be learned by a convolutional neural network.
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[b]{0.3\textwidth}
+    \includegraphics[width=\textwidth]{imgs/conv/lena.png}
+    \caption{Original}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.3\textwidth}
+    \includegraphics[width=\textwidth]{imgs/conv/lena2.jpg}
+    \caption{Laplacian}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.3\textwidth}
+    \includegraphics[width=\textwidth]{imgs/conv/lena3.png}
+    \caption{Gaussian}
+  \end{subfigure}
+    \caption{Example of convolution filters. At the left we have a very classical image, called Lena. On the center there is the laplacian filter applied to it using a convolution and on the right there is the gaussian filter applied to it.}
+    \label{fig:conv_ex}
+\end{figure}
+
+A single convolution is not expressive enough to solve segmentation problems. Normally, several layers are required, but having too many layers has the problem of vanishing and exploding which is why residual connections are needed. That was one of the ideas behind the first deep learning attempt at biomedical segmentation made by Olaf Ronneberger et al. \cite{unet}. They proposed an encoder-decoder architecture as shown in \autoref{fig:unet}.
 
 \begin{figure}[ht]
     \centering
@@ -95,7 +208,7 @@ Hovernet employs the same encoder-decoder architecture as U-net but it combines 
     &+ \frac{\lambda_{dice}^{TP}}{B} \sum_{i=0}^B \left(1 - \frac{\sum_{j=0}^D TP(x_i)_j (y_{i}^{TP})_j}{\sum_{j=0}^D (TP(x_i)_j)^2 + \sum_{j=0}^D ((y_{i}^{TP})_j)^2}\right)
 \end{align}
 
-\noindent where all the $\lambda$ are hyperparameters, the letter $y$ denotes GT in any form, $h$ and $v$ are horizontal and vertical GT maps, $gh$ and $gv$ are the gradients of horizontal and vertical maps, $D$ is the number of pixels in any image, $B$ is the batch size, $\| \cdot \|_2^2$ is the $L_2$ norm, $H(\cdot)$ and $V(\cdot)$ are the outputs of the HV branch, $NP(\cdot)$ the output of the NP branch and $TP(\cdot)$ the output of the TP branch.
+\noindent where all the $\lambda$ are hyperparameters, the letter $y$ denotes GT in any form, $h$ and $v$ are horizontal and vertical GT maps, $gh$ and $gv$ are the gradients of horizontal and vertical maps, $D$ is the number of pixels in any image, $B$ is the batch size, $\| \cdot \|_2^2$ is the $L_2$ norm, $H(\cdot)$ and $V(\cdot)$ are the outputs of the HV branch, $NP(\cdot)$ the output of the NP branch and $TP(\cdot)$ the output of the TP branch. This loss is particularly interesting because it combines multiple ideas. It is a mix of classification, regression and segmentation losses. Moreover, it can be considered as a second order optimisation since it is using the mean square error over the gradients. On the other side it combines the cross-entropy which is designed specially for classification problems while optimising the Dice loss which is more or less like maximising the intersection of predicted and real cells, more on that on \autoref{subsec:dice}. It is expected that optimising all the different objectives while using a single encoder is going to make that encoder extract features useful for a variety of tasks, thus generalising better.
 
 After the model is trained, it can be used for inference in addition with a post-processing phase which consists of the watershed algorithm. This particular watershed requires an energy landscape which defines the space where the flooding is made and a marker that contains the starting points to start the flooding. Both are defined below
 
@@ -110,13 +223,11 @@ After the model is trained, it can be used for inference in addition with a post
     \mathcal{S}_m(\bX) = \max(S_x * H(\bX), S_y * V(\bX))
 \end{equation}
 
-\noindent where $S_x$ and $S_y$ are Sobel filters \cite{sobel} and $*$ is the convolution operation. The whole process can be visualized in \autoref{fig:hovpipe}. 
-
-%% Postprocessing step
+\noindent where $S_x$ and $S_y$ are Sobel filters \cite{sobel} and $*$ is the convolution operation. The whole process can be visualised in \autoref{fig:hovpipe}. The reason for using gradient filters over the HV branch is that if the prediction is perfect, then such gradients are exactly the NP branch. Therefore, if we apply a watershed of one over the other it is expected that one branch fills the errors of the other. That is not so simple in practice, and for this post processing algorithm to work both the HV branch and the NP branch need to be expanded and contracted using a thresholding function over a threshold that was carefully selected by the authors based on empirical results.
 
 \section{Graph neural networks}\label{sec:gnn}
 
-Having described the state of the art for computer vision, let's introduce the state of the art of graph neural networks as well. There are more than 50 different possible architectures \cite{graph_survey} and more than 300.000 possible configurations \cite{you2021design}. However I will focus mainly on two of the most popular architectures: graph convolution and graph attention. Both can be used for node classification which is what we are interested about since we are going to treat cells as nodes. More on that description in \autoref{sec:descr}.
+Having described the state of the art for computer vision, let's introduce the state of the art of graph neural networks as well. Graph neural networks are very similar to neural networks but the key difference is that the computational graph is different for every node and it varies depending on which nodes it is connected to. GNNs as used in this thesis generate an embedding which decodes all the relevant information of that node. Most of the techniques used with neural networks can be extended to GNNs as well, like dropout \cite{dropout}, batch normalisation \cite{batchnorm} or pooling layers \cite{graph_survey}. In fact, there are more than 50 different possible architectures \cite{graph_survey} and more than 300.000 possible configurations \cite{you2021design}. However I will focus mainly on two of the most popular layers: graph convolution and graph attention. Both can be used for node classification which is what we are interested about since we are going to treat cells as nodes. More on that description in \autoref{sec:descr}.
 
 \subsection{Graph convolution}\label{sec:gcn}
 
@@ -174,4 +285,47 @@ More formally, the computation can be described as follows
     \bh_j^{(l+1)} = \bigparallel_{h=1}^H \sigma \left(\sum_{k \in \mathcal{N}_j} \alpha_{jkh} \bW^{(l)}_h\bh_k^{(l)}\right)
 \end{equation}
 
-\noindent where now $\bW^{(l)}_h \in \R^{d \times Hd}$, the attention weights are different for each head and sum up to one in each head $\sum_{k\in\mathcal{N}_j}\alpha_{jkh}=1,\ \forall h$ and in the final layer heads are averaged instead of concatenated as explained in \cite{graphatt}.
+\noindent where now $\bW^{(l)}_h \in \R^{d \times Hd}$, the attention weights are different for each head and sum up to one in each head $\sum_{k\in\mathcal{N}_j}\alpha_{jkh}=1,\ \forall h$ and in the final layer heads are averaged instead of concatenated as explained in \cite{graphatt}. Notice that there is not bias as with the convolution. This is because the attention scores are thought to be similarities between nodes. The attention mechanism is just a way of averaging embeddings based on their similarity to the target node. There is no need for bias under that interpretation.
+
+\section{XGBoost}
+
+The last section of this chapter is devoted to give a very brief explanation of an algorithm that is going to be tangentially used in the experiments as a way to perform an ablation study to see if the graphs are really being useful or not. XGBoost \cite{xgboost} is an algorithm to perform either regression or classification over tabular data. In our case, it is going to be used over the extracted features of each cell (perimeter, area, ...) to predict its class. The XGBoost algorithm is in fact a gradient boosted tree, the distinction here comes because XGBoost is a faster implementation of such idea. To understand what a gradient boosted tree we first need to explain what a random forest is. It is a set of tree classifiers that are ensembled together using the average of their predictions. A visualisation of it is here below\footnote{\url{http://aiweb.techfak.uni-bielefeld.de/content/bworld-robot-control-software/} Accessed 25th January 2023}.
+
+\scalebox{0.7}{
+\centering
+\begin{forest}
+  for tree={l sep=3em, s sep=2em, anchor=center, inner sep=0.4em, fill=blue!50, circle, where level=2{no edge}{}}
+  [
+  Training Data, node box
+  [sample and feature bagging, node box, alias=bagging, above=3em
+  [,red!70,alias=a1[[,alias=a2][]][,red!70,edge label={node[above=1ex,red arrow]{}}[[][]][,red!70,edge label={node[above=1ex,red arrow]{}}[,red!70,edge label={node[below=1ex,red arrow]{}}][,alias=a3]]]]
+  [,red!70,alias=b1[,red!70,edge label={node[below=1ex,red arrow]{}}[[,alias=b2][]][,red!70,edge label={node[above=1ex,red arrow]{}}]][[][[][,alias=b3]]]]
+  [~~~$\dots$~,scale=2,no edge,fill=none,yshift=-3em]
+  [,red!70,alias=c1[[,alias=c2][]][,red!70,edge label={node[above=1ex,red arrow]{}}[,red!70,edge label={node[above=1ex,red arrow]{}}[,alias=c3][,red!70,edge label={node[above=1ex,red arrow]{}}]][,alias=c4]]]]
+  ]
+  \node[tree box, fit=(a1)(a2)(a3)] (t1) {};
+  \node[tree box, fit=(b1)(b2)(b3)] (t2) {};
+  \node[tree box, fit=(c1)(c2)(c3)(c4)] (tn) {};
+  \node[below right=0.5em, inner sep=0pt] at (t1.north west) {Tree 1};
+  \node[below right=0.5em, inner sep=0pt] at (t2.north west) {Tree 2};
+  \node[below right=0.5em, inner sep=0pt] at (tn.north west) {Tree $n$};
+  \path (t1.south west)--(tn.south east) node[midway,below=4em, node box] (mean) {mean in regression or majority vote in classification};
+  \node[below=3em of mean, node box] (pred) {prediction};
+  \draw[black arrow={5mm}{4mm}] (bagging) -- (t1.north);
+  \draw[black arrow] (bagging) -- (t2.north);
+  \draw[black arrow={5mm}{4mm}] (bagging) -- (tn.north);
+  \draw[black arrow={5mm}{5mm}] (t1.south) -- (mean);
+  \draw[black arrow] (t2.south) -- (mean);
+  \draw[black arrow={5mm}{5mm}] (tn.south) -- (mean);
+  \draw[black arrow] (mean) -- (pred);
+\end{forest}
+}
+
+Now, to pass from a random forest to a gradient boosted tree we have to substitute the idea of bagging (doing the average) to boosting. Boosting consists of incrementally add models to the ensemble that each of them predicts the error of the previous ensemble. This way every model you add operates on a smaller target variable. For classification problems, the residual is taken from the log likelihood so that it is treated as a regression problem over the real line. The process is represented on \autoref{fig:gdbt}\footnote{Image taken from \url{https://medium.com/analytics-vidhya/what-is-gradient-boosting-how-is-it-different-from-ada-boost-2d5ff5767cb2} Accessed 15th May 2023}.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{imgs/conv/gdbt.png}
+    \caption{Visualisation of the concept of boosting for tree models. Image taken from a medium post.}
+    \label{fig:gdbt}
+\end{figure}

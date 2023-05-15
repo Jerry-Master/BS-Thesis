@@ -1,10 +1,10 @@
 \chapter{Problem Solving}
 
-Having described the problem at hand as well as relevant deep learning methods it is time to join it all into one single method. In this chapter we will cover a detailed explanation of the method proposed, the metrics that will be used to compare across architectures and hyperparameters, the experiments carried out to show its usefulness and the results obtained.
+Having described the problem at hand as well as relevant deep learning methods it is time to join it all into one single method. In this chapter we will cover a detailed explanation of the method proposed, the metrics that will be used to compare across architectures and hyperparameters and the experiments carried out to show its usefulness.
 
 \section{Method description}\label{sec:descr}
 
-I have described how the cell classification problem was tackled with the help of convolutional neural networks. I have also explained two algorithms used for node classification. It is time to merge both fields. For that, we need to describe the cell classification problem as a node classification problem. As mentioned in \autoref{sec:gnn}, the nodes of our graph are going to be the individual cells. It is left to define the edges. We are going to consider two nodes (cells) to be related if they are sufficiently close. By sufficiently close it is meant that their euclidean distance is less than some previously defined amount. Apart from that, to have manageable graphs, the degree of each node is limited by only considering a small amount of nearby nodes as possible connections. This way we ensure the number of edges increases linearly with the number of nodes making our method more scalable. An example of such graph is on \autoref{fig:graph_def}. 
+I have described how the cell classification problem was tackled with the help of convolutional neural networks. I have also explained two algorithms used for node classification. It is time to merge both fields. For that, we need to describe the cell classification problem as a node classification problem. What are going to be our nodes? The individual cells extracted from Hovernet. Using that computer algorithm we are going to infer the location of the cells in a patch by considering the contours in the predicted segmentation. Those contours are used just to extract what we call morphological features of the cell and its coordinates in the image. It is left to define the edges. We are going to consider two nodes (cells) to be related if they are sufficiently close. By sufficiently close it is meant that their euclidean distance is less than some previously defined amount. Apart from that, to have manageable graphs, the degree of each node is limited by only considering a small amount of nearby nodes as possible connections. This way we ensure the number of edges increases linearly with the number of nodes making our method more scalable. An example of such graph is on \autoref{fig:graph_def}. 
 
 \begin{figure}[h]
     \centering
@@ -33,7 +33,15 @@ Given nodes and edges we can still give more information to the graph neural net
     \item A prior distribution of the class. It is computed using the output of Hovernet. Each class probability is inferred as the number of pixels of that class predicted by Hovernet divided by the total number of pixels of the cell.
 \end{itemize}
 
-\noindent Later on, in \autoref{sec:exp} an experiment is made to discover how relevant the selected features are.
+\noindent Later on, in \autoref{sec:exp} an experiment is described to discover how relevant the selected features are.
+
+\section{Hyperparameter tuning}
+
+In our first step, Hovernet, we did not try to optimize any hyperparameter for two reasons. The first, the compute power needed is simply prohibitive. One configuration requires several hours to train. Doing cross-validation on it or trying more than 10 configurations is going to last for weeks for every dataset involved. The other reason is that the method is quite stable. Looking at the loss function during training for the train and validation dataset, we observed that after a few tens of epochs the curve converged for both datasets. Moreover, we are going to build on top of the Hovernet output, tuning Hovernet is independent from tuning the graph model on top. By showing that stacking a GNN on top of it makes the metrics improve, it is quite probable that by improving the backbone, the whole model improves as well. 
+
+For the graph networks we will be  tuning 4 variables. The first one is the number of layers. We fixed the number of neurons on its layer to 100 and try architectures from 1 layer up to 15 layers. The second hyperparameter we tune is the dropout rate. We apply dropout after every graph layer. The third hyperparameter is batch normalisation. We consider models with and without it. And the last hyperparameter is the type of the graph layer, either convolution or attention. Having defined those, we perform a grid search over them. We train all the different configurations and evaluate them in a validation dataset. The configuration that gives the best validation score is then evaluated on the test set, and those are the metrics that are reported. Since we are optimising the type of graph layer used, I will refer to the model as GNN and not as GCN (convolution) of GAT (attention) since it could be any of those.
+
+In the case of XGBoost the tuning is done a bit differently. We optimize over the learning rate, the maximum depth of each tree and the percentage of features visible to each tree. The number of trees is fixed at 500 for every configuration. Since XGBoost is so efficient we could perform cross validation to estimate the validation score. Concretely, we used 10 fold cross validation. Then, the configuration with the best cross validation score was tested on the test set, and those are the metrics reported.
 
 \section{Evaluation metrics}\label{sec:metrics}
 
@@ -162,7 +170,7 @@ Another way of averaging the individual $F_1$ scores is by micro-averaging. When
 The micro-average is then the sum of the diagonal divided by the sum of all the entries in the matrix. It is quite similar to how the accuracy is computed. For that reason sometimes this metric is referred to as the accuracy in multi-class problems.
 
 \newpage
-\subsection{Dice's coefficient}
+\subsection{Dice's coefficient}\subsection{subsec:dice}
 
 The Dice's coefficient can be viewed as a generalisation of the $F_1$ score. Given two sets $X$ and $Y$ the Dice's coefficient is defined as 
 
@@ -225,12 +233,12 @@ More specifically, predicted probability is quantised. The x axis represents the
     \label{fig:hov_rel}
 \end{figure}
 
-Reliability diagrams can be converted into a metric in the same way the ROC was made a metric by using the area under it. Here, instead of the area under the curve, the area between the model curve and a perfectly calibrated curve is taken. Furthermore, since points in that diagram can represent sets of arbitrary size the area of each bin is weighted by the number of samples in it. Where now we are calling the points bins, since in fact, each point has a width that represents the range of probabilities it takes into account. A more appropriate visualisation is on \autoref{fig:rel2}. The metric derived is called Expected Calibration Error (ECE).
+Reliability diagrams can be converted into a metric in the same way the ROC was made a metric by using the area under it. Here, instead of the area under the curve, the area between the model curve and a perfectly calibrated curve is taken. Furthermore, since points in that diagram can represent sets of arbitrary size the area of each bin is weighted by the number of samples in it. Where now we are calling the points bins, since in fact, each point has a width that represents the range of probabilities it takes into account. A more appropriate visualisation is on \autoref{fig:rel2}\footnote{Image taken from \url{https://github.com/EFS-OpenSource/calibration-framework/issues/17} Accessed 15th May 2023}. The metric derived is called Expected Calibration Error (ECE).
 
 \begin{figure}[ht]
     \centering
     \includegraphics[width=\textwidth]{imgs/rel2.png}
-    \caption{Another way of representing a reliability diagram.}
+    \caption{Another way of representing a reliability diagram. The blue colour is the real probability of a class in that group. The two red colours denote the difference with respect to the optimally calibrated classifier. The difference can be by lack or by excess, that is why there are two colours. The darker one means the real probability is higher than the predicted one. And the lighter one means the predicted probability is lower than what it should be.}
     \label{fig:rel2}
 \end{figure}
 
@@ -244,25 +252,25 @@ I have depicted a clear way of measuring uncertainty calibration in the previous
     &= \frac{2D + (N-2) T}{N T} = \frac{2}{N} \text{Micro} + \frac{N-2}{N}
 \end{align}
 
-where the intermediate step can be deduced by counting how many times does each term appears. The diagonal terms appear $N-1$ times while the rest of terms appear $N-2$ times, therefore $\sum_{k} \sum_{i,j\neq k} a_{ij} = D + (N-1)T$, concluding the proof. Surprisingly enough, the extension of the accuracy approaches 1 as the number of classes increases so it is quite a bad metric. In the experiments below, we will be using the extension of the ECE and call it just ECE for simplicity in the multiclass datasets.
+where the intermediate step can be deduced by counting how many times does each term appears. The diagonal terms appear $N-1$ times while the rest of terms appear $N-2$ times, therefore $\sum_{k} \sum_{i,j\neq k} a_{ij} = D + (N-1)T$, concluding the proof. Surprisingly enough, the extension of the accuracy approaches 1 as the number of classes increases so it is quite a bad metric and is not used in practice, that is why the Micro $F_1$ is always preferred. In the experiments below, we will be using the extension of the ECE and call it just ECE for simplicity in the multiclass datasets.
 
 \section{Experiments}\label{sec:exp}
 
 Two experiments were carried out to show the usefulness of graph neural networks in the problem of cell detection and another two experiments were made to provide insights about the models involved. Results are in \autoref{sec:results}, this section is only to describe the experiments themselves. 
 
 
-\subsection{GNN vs CNN}
+\subsection{GNN vs CNN}\label{subsec:gnn-cnn}
 
 The main experiment and the one that supports the principal thesis of this work compares convolutional neural networks with graph neural networks. In order to state that GNNs are actually useful they must outperform CNNs (Hovernet) in every metric defined in \autoref{sec:metrics}. But outperforming in just one dataset is not enough. For that reason the comparison will be made using all the datasets from the original Hovernet article \cite{hovernet, gamper2020pannuke, 8880654}, and using several internal datasets of the DigiPatics project \cite{DigiPatics2022}. More concretely, the methods will be evaluated in the HER2 stained breast dataset and the H\&E stained lung dataset. For the multi-class problems, multi-class metrics will be taken into account and for binary problems, binary metrics.
 
-\subsection{GNN vs XGBoost}
+\subsection{GNN vs XGBoost}\label{subsec:gnn-xgb}
 
 Outperforming CNNs may not be due to the graph structure. It is possible that the extracted features are sufficient to improve CNN results. It may be that the edges do not contain any useful information. To account for that, GNN must be compared with node-only methods. In this case we selected XGBoost \cite{xgboost} for comparison since it has been in the leaderboard of several Kaggle competitions\footnote{\url{https://dataaspirant.com/xgboost-algorithm/}}. By comparing node-only methods with GNNs we can know if the value of GNNs reside on the extracted features or on the graph structure itself.
 
-\subsection{Scaling CNNs}
-
-The original Hovernet article restricted their images to having 270x270 pixels. That is a very narrow view of the cells. It seems intuitive that increasing the receptive field of the model increases its performance too. But science does not understand intuition, only facts. So an experiment needs to be carried out in order to prove if increasing the receptive field is really beneficial. Apart from that, since the original weights of Hovernet are open source, we can initialise our weights with them. Therefore, there are four different models that we will call 270, 270FT, 518 and 518FT. The number indicates the resolution of the images and FT means fine-tuned. The models with FT in the name initialise their weights with the ones from the original Hovernet article. The other models initialise their weights at random. The datasets used in this experiment are only our own lung and breast datasets.
-
-\subsection{Void GNNs}
+\subsection{Void GNNs}\label{subsec:void-gnn}
 
 Finally, the last experiment is about knowing if the extracted features are relevant or not. We distinguish two types of features: morphological and probabilities. The first group is independent from the Hovernet output while the second is not. To see which of them are more important we train the same GNN models with different features. One with all the features, one only with morphological features and another only with probabilities. By comparing the metrics obtained we can discern which set of features is more relevant.
+
+\subsection{Scaling CNNs}\label{subsec:scaling}
+
+The original Hovernet article restricted their images to having 270x270 pixels. That is a very narrow view of the cells. It seems intuitive that increasing the receptive field of the model increases its performance too. But science does not understand intuition, only facts. So an experiment needs to be carried out in order to prove if increasing the receptive field is really beneficial. Apart from that, since the original weights of Hovernet are open source, we can initialise our weights with them. Therefore, there are four different models that we will call 270, 270FT, 518 and 518FT. The number indicates the resolution of the images and FT means fine-tuned. The models with FT in the name initialise their weights with the ones from the original Hovernet article. The other models initialise their weights at random. The datasets used in this experiment are only our own lung and breast datasets.

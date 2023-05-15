@@ -5,7 +5,7 @@
 \usepackage[english, spanish, catalan]{babel}
 \usepackage{graphicx}
 \usepackage{geometry}
-\usepackage{hyperref}
+\PassOptionsToPackage{hyphens}{url}\usepackage{hyperref}
 \usepackage{titlesec}
 \usepackage{lipsum}
 \usepackage{fancyhdr}
@@ -15,6 +15,25 @@
 \usepackage{subcaption}
 \usepackage{stmaryrd}
 \usepackage{url}
+\usepackage{tikz}
+\usetikzlibrary{shapes,
+                tikzmark}
+\tikzset{every tikzmarknode/.style={%
+        draw=red, semithick, inner sep=2pt}
+        }
+\usepackage{forest}
+\usetikzlibrary{fit,positioning}
+
+\tikzset{
+  red arrow/.style={
+    midway,red,sloped,fill, minimum height=3cm, single arrow, single arrow head extend=.5cm, single arrow head indent=.25cm,xscale=0.3,yscale=0.15,
+    allow upside down
+  },
+  black arrow/.style 2 args={-stealth, shorten >=#1, shorten <=#2},
+  black arrow/.default={1mm}{1mm},
+  tree box/.style={draw, rounded corners, inner sep=0.5em},
+  node box/.style={white, draw=black, text=black, rectangle, rounded corners},
+}
 \input{definitions.tex}
 
 %% Bibliography
