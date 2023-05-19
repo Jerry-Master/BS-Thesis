@@ -68,7 +68,7 @@ As a side note, this dataset is enough for the research carried out here but is 
 
 \subsection{DigiPatics breast dataset}\label{sec:data_breast}
 
-Another tumour related dataset is provided by the DigiPatics group. This one was annotated by David Anglada and supervised by pathologist Teresa Soler. It contains 141 images from 4 different patients that had breast cancer. The biopsies were stained with HER2 staining. This time the dataset contains 6 different classes counting the background. I will not dive into much details of this dataset and what represents every class, the only fact I will like to mention is that domain experts on this field and the engineers collaborating with them do not think that group structure is as important here as it is in the case of lung tumours. In fact, experiments described in \autoref{subsec:gnn-xgb} and \autoref{subsec:void-gnn} show that this is the case. In \autoref{fig:mama_ex} you can see an example of the type of images that are in this dataset.
+Another tumour related dataset is provided by the DigiPatics group. This one was annotated by David Anglada and supervised by pathologist Teresa Soler. It contains 141 images from 4 different patients that had breast cancer. The biopsies were stained with HER2 staining. This time the dataset contains 6 different classes counting the background. I will not dive into much details of this dataset and what represents every class, the only fact I would like to mention is that domain experts on this field and the engineers collaborating with them do not think that group structure is as important here as it is in the case of lung tumours. In fact, experiments described in \autoref{subsec:gnn-xgb} and \autoref{subsec:void-gnn} show that this is the case. In \autoref{fig:mama_ex} you can see an example of the type of images that are in this dataset.
 
 \begin{figure}[H]
     \centering
@@ -176,7 +176,7 @@ To extend it to 2D data like images, we could still use this matrix definition b
     \label{fig:conv_ex}
 \end{figure}
 
-A single convolution is not expressive enough to solve segmentation problems. Normally, several layers are required, but having too many layers has the problem of vanishing and exploding which is why residual connections are needed. That was one of the ideas behind the first deep learning attempt at biomedical segmentation made by Olaf Ronneberger et al. \cite{unet}. They proposed an encoder-decoder architecture as shown in \autoref{fig:unet}.
+A single convolution is not expressive enough to solve segmentation problems. Normally, several layers are required, but having too many layers has the problem of vanishing and exploding gradient which is why residual connections are needed. That was one of the ideas behind the first deep learning attempt at biomedical segmentation made by Olaf Ronneberger et al. \cite{unet}. They proposed an encoder-decoder architecture as shown in \autoref{fig:unet}.
 
 \begin{figure}[ht]
     \centering

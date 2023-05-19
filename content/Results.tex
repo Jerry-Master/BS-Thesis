@@ -9,7 +9,7 @@ This is the main experiment of my thesis. It shows whether using graphs improves
 
 On the other datasets, for two out of the three multiclass datasets it does improve. Moreover it also lowers the ECE, showing it is not only predicting better but is better calibrated. Nonetheless, the remaining dataset (CoNSeP) poses a question. Why is not working there? Probably because the structure is not so useful when working with colorectal cancer. It may also be that since there are seven classes, the relationship between them are more complex. Maybe if we considered just two classes the GNNs would again win. We would have liked to perform such experiment, but we lack the expertise on colorectal cancer to decide how to properly label the cells to achieve such results. Another remarkable property is that even though GNNs are worse in the CoNSeP dataset overall, they have a lower ECE, meaning they are still better calibrated.
 
-In the datasets that GNNs do improve over CNNs, it is left to discern the real cause why that is happening. When talking to experts, we expected GNNs to be a good fit for the lung dataset but not for the breast one. In the lung dataset they pay special attention to the way cells are grouped together, while in the breast dataset it was not so much the case. So, why does using graphs give better results in both cases? The GNN vs XGBoost and the Void GNN experiments will throw light in this matter.
+In the datasets that GNNs do improve over CNNs, it is left to discern the real cause why that is happening. When talking to experts, we expected GNNs to be a good fit for the lung dataset but not for the breast one. In the lung dataset they pay special attention to the way cells are grouped together, while in the breast dataset it was not so much the case. So, why does using graphs give better results in both cases? The GNN vs XGBoost and the Void GNN experiments will throw light in this matter. Also, we are here referring to GNNs in an abstract manner for simplicity, the specific architecture that performed best on each case is reported in \autoref{chap:hyper}.
 
 \begin{table}[ht]
 \centering
@@ -70,6 +70,7 @@ So, are edges neccessary? As we can see here, the answer is not crystal clear. I
     \begin{tabular}{c|c|c|c|c|c|}
   \cline{2-6}
   & Accuracy ($\uparrow$) & $F_1$ score ($\uparrow$) & ROC AUC ($\uparrow$) & ECE ($\downarrow$) & \%Err ($\downarrow$) \\ \hline
+  \multicolumn{1}{|c|}{CNN}  & 82.39\% & 57.69\% & 75.20\% & 0.1653 & 11.89\% \\ \hline
 \multicolumn{1}{|c|}{XGB}  & \textbf{83.77\%} & 62.64\% & 84.20\% & 0.1007 & 7.85\% \\ \hline
 \multicolumn{1}{|c|}{GNN}  & 83.27\% & \textbf{66.53\%} & \textbf{86.84\%} & \textbf{0.0884} & \textbf{3.52\%} \\ \hline
 \end{tabular}
@@ -80,6 +81,7 @@ So, are edges neccessary? As we can see here, the answer is not crystal clear. I
 \begin{tabular}{c|c|c|c|c|}
   \cline{2-5}
   & Micro $F_1$ score ($\uparrow$) & Macro $F_1$ score ($\uparrow$) & Weighted $F_1$ score ($\uparrow$) & ECE ($\downarrow$)  \\ \hline
+  \multicolumn{1}{|c|}{CNN}  & 65.12\% & 40.55\% & 66.38\% & 0.3243 \\ \hline
 \multicolumn{1}{|c|}{XGB}  & \textbf{78.51\%} & \textbf{47.36\%} & \textbf{79.78\%} & 0.2502   \\ \hline
 \multicolumn{1}{|c|}{GNN}  & 70.47\% & 42.53\% & 71.13\% & \textbf{0.2501}   \\ \hline
 \end{tabular}
@@ -90,7 +92,8 @@ So, are edges neccessary? As we can see here, the answer is not crystal clear. I
     \begin{tabular}{c|c|c|c|c|}
   \cline{2-5}
   & Micro $F_1$ score ($\uparrow$) & Macro $F_1$ score ($\uparrow$) & Weighted $F_1$ score ($\uparrow$) & ECE ($\downarrow$) \\ \hline
-\multicolumn{1}{|c|}{XGB}  & \textbf{71.54\%} & \textbf{51.64\%} & \textbf{69.87\%} & \textbf{0.0320} \\ \hline
+  \multicolumn{1}{|c|}{CNN}  & 71.11\% & \textbf{54.06\%} & \textbf{70.39\%} & 0.0680 \\ \hline
+\multicolumn{1}{|c|}{XGB}  & \textbf{71.54\%} & 51.64\% & 69.87\% & \textbf{0.0320} \\ \hline
 \multicolumn{1}{|c|}{GNN}  & 64.44\% & 47.87\% & 61.42\% & 0.0539  \\ \hline
 \end{tabular}
 \caption{CoNSeP dataset.}
@@ -100,6 +103,7 @@ So, are edges neccessary? As we can see here, the answer is not crystal clear. I
 \begin{tabular}{c|c|c|c|c|}
   \cline{2-5}
   & Micro $F_1$ score ($\uparrow$) & Macro $F_1$ score ($\uparrow$) & Weighted $F_1$ score ($\uparrow$) & ECE ($\downarrow$) \\ \hline
+  \multicolumn{1}{|c|}{CNN}  & 82.06 \% & 68.76\% & 82.34\% & 0.0774 \\ \hline
 \multicolumn{1}{|c|}{XGB}  & 85.23\% & \textbf{76.09\%} & 85.20\% & 0.0449 \\ \hline
 \multicolumn{1}{|c|}{GNN}  & \textbf{88.71\%} & 69.72\% & \textbf{89.05\%} & \textbf{0.0251} \\ \hline
 \end{tabular}
@@ -110,7 +114,9 @@ So, are edges neccessary? As we can see here, the answer is not crystal clear. I
 \newpage
 \subsection{Void GNNs}
 
-Another way of seeing if the good performance of graphs is due to the fact that we are considering the existence of edges or it is explained by the attributes of the nodes, is to train the graphs models with and without the attributes. If there is no performance difference, then edges are relevant. Otherwise, it is less relevant. Moreover, there is a set of attributes that depends on the layers behind, the probabilities. To discern if GNNs are working cause they are stacked above or because there is a graph structure we also train the models with and without the probabilities. We observe that in the datasets that XGBoost did not outperform GNNs the GNN trained with no information about the prior probability given by Hovernet does in fact perform better than the model with those probabilities. However, in the two datasets that XGBoost did give better results we can see that using probabilities gives a benefit over using other types of features. This tells us that MoNuSAC and DigiPatics lung datasets have more structure than CoNSeP and DigiPatics breast datasets. In DigiPatics breast GNNs gave better results than CNN but it was due to stacking. For DigiPatics lung it was because the graph is indeed a good way of modelling the problem. 
+Another way of seeing if the good performance of graphs is due to the fact that we are considering the existence of edges or it is explained by the attributes of the nodes, is to train the graph models with and without the attributes. If there is no performance difference, then edges are relevant. Otherwise, it is less relevant. Moreover, there is a set of attributes that depends on the layers behind, the probabilities. To discern if GNNs are working cause they are stacked above or because there is a graph structure we also train the models with and without the probabilities. By training we refer to the full hyperparameter process as described in \autoref{sec:hyper} where we optimise parameters on training set and hyperparameters on validation set prior to evaluating on the test set. Specific details of the values that were selected are in \autoref{chap:hyper}.
+
+We observe that in the datasets that XGBoost did not outperform GNNs the GNN trained with no information about the prior probability given by Hovernet does in fact perform better than the model with those probabilities. However, in the two datasets that XGBoost did give better results we can see that using probabilities gives a benefit over using other types of features. This tells us that MoNuSAC and DigiPatics lung datasets have more structure than CoNSeP and DigiPatics breast datasets. In DigiPatics breast GNNs gave better results than CNN but it was due to stacking. For DigiPatics lung it was because the graph is indeed a good way of modelling the problem. 
 
 Another conclusion that derives from this tables is that some kind of features are needed, no matter how simple they are. Training the graph networks without any feature at all gave very poor results. It also resulted in a more unstable training in general. Providing the model with some information about the individual cells is crucial for the proper functioning of the method.
 
@@ -233,7 +239,7 @@ The lung case is quite strange for two reasons. First, because a smaller field o
 \newpage
 \subsection{CNNs metrics in detail}
 
-In all the experiments above I provided metrics only for 1-1 matchings of cells. That is a fair way of comparing CNN to GNN since GNN can only improve predictions on 1-1 matchings. However, it does not show the full picture. The CNN can miss cells or predict cells that do not exist. For that reason I here provide the same metrics as above but adding one extra class: the background. It never has true positives, only false positives and false negatives. Thus, it will almost always be worse than the metrics above given. For a counter example on when it is not worse, look at the next paragraph. The bigger the gap, the more cells it is missing or incorrectly predicting. Nevertheless, such gap does not alter any of the conclusions. In this project we did not try to narrow this gap because we consider the classification problem to be inherently more difficult than the segmentation problem. We believe improving the segmentation problem is simply a matter of more data and bigger models. If you think about it, you can detect cells without formal knowledge, it is just a matter of geometry and color. But recognising where are the tumours located? That requires more than 10 years of training to humans, and even in that case experts still have doubts. Therefore we directed our efforts toward improving the classification, not the segmentation.
+In all the experiments above I provided metrics only for 1-1 matchings of cells as explained in \autoref{subsec:conf}. We are only considering cells that are located in almost the same position in the ground truth and in the predicted segmentation<. That is a fair way of comparing CNN to GNN since GNN can only improve predictions on 1-1 matchings. However, it does not show the full picture. The CNN can miss cells or predict cells that do not exist. For that reason I here provide the same metrics as above but adding one extra class: the background. It never has true positives, only false positives and false negatives. Thus, it will almost always be worse than the metrics above given. For a counter example on when it is not worse, look at the next paragraph. The bigger the gap, the more cells it is missing or incorrectly predicting. Nevertheless, such gap does not alter any of the conclusions. In this project we did not try to narrow this gap because we consider the classification problem to be inherently more difficult than the segmentation problem. We believe improving the segmentation problem is simply a matter of more data and bigger models. If you think about it, you can detect cells without formal knowledge, it is just a matter of geometry and color. But recognising where are the tumours located? That requires more than 10 years of training to humans, and even in that case experts still have doubts. Therefore we directed our efforts toward improving the classification, not the segmentation.
 
 You may have noticed that in the DigiPatics breast dataset the macro $F_1$ score did not worsen when adding the background. It seems counterintuitive since we are adding a class with no true positives, only false positives and false negatives. But, the key to why this happens is purely technical. This is the global confusion matrix for the test set in the DigiPatics breast dataset:
 

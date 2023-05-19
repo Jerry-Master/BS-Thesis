@@ -35,19 +35,19 @@ Given nodes and edges we can still give more information to the graph neural net
 
 \noindent Later on, in \autoref{sec:exp} an experiment is described to discover how relevant the selected features are.
 
-\section{Hyperparameter tuning}
+\section{Hyperparameter tuning}\label{sec:hyper}
 
-In our first step, Hovernet, we did not try to optimize any hyperparameter for two reasons. The first, the compute power needed is simply prohibitive. One configuration requires several hours to train. Doing cross-validation on it or trying more than 10 configurations is going to last for weeks for every dataset involved. The other reason is that the method is quite stable. Looking at the loss function during training for the train and validation dataset, we observed that after a few tens of epochs the curve converged for both datasets. Moreover, we are going to build on top of the Hovernet output, tuning Hovernet is independent from tuning the graph model on top. By showing that stacking a GNN on top of it makes the metrics improve, it is quite probable that by improving the backbone, the whole model improves as well. 
+In our first step, Hovernet, we did not try to optimize any hyperparameter for two reasons. The first, the compute power needed is simply prohibitive. One configuration requires several hours to train. Doing cross-validation on it or trying more than 10 configurations is going to last for weeks for every dataset involved. The other reason is that the method is quite stable. Looking at the loss function during training for the train and validation dataset, we observed that after a few tens of epochs the curve converged for both datasets. So it seems to indicate that changing hyperparameters is not going to give a significant difference for the Hovernet model.
 
 For the graph networks we will be  tuning 4 variables. The first one is the number of layers. We fixed the number of neurons on its layer to 100 and try architectures from 1 layer up to 15 layers. The second hyperparameter we tune is the dropout rate. We apply dropout after every graph layer. The third hyperparameter is batch normalisation. We consider models with and without it. And the last hyperparameter is the type of the graph layer, either convolution or attention. Having defined those, we perform a grid search over them. We train all the different configurations and evaluate them in a validation dataset. The configuration that gives the best validation score is then evaluated on the test set, and those are the metrics that are reported. Since we are optimising the type of graph layer used, I will refer to the model as GNN and not as GCN (convolution) of GAT (attention) since it could be any of those.
 
-In the case of XGBoost the tuning is done a bit differently. We optimize over the learning rate, the maximum depth of each tree and the percentage of features visible to each tree. The number of trees is fixed at 500 for every configuration. Since XGBoost is so efficient we could perform cross validation to estimate the validation score. Concretely, we used 10 fold cross validation. Then, the configuration with the best cross validation score was tested on the test set, and those are the metrics reported.
+In the case of XGBoost the tuning is done a bit differently. We optimize over the learning rate, the maximum depth of each tree and the percentage of features visible to each tree. The number of trees is fixed at 500 for every configuration. Since XGBoost is so efficient we could perform cross validation to estimate the validation score. Concretely, we used 10 fold cross validation. Then, the configuration with the best cross validation score was tested on the test set, and those are the metrics reported. For a more detailed analysis of which combination of hyperparameters was the optimal in each case, please refer to the \autoref{chap:hyper}.
 
 \section{Evaluation metrics}\label{sec:metrics}
 
 This section is going to provide a review of the most common metrics for any classification problem, either binary of multiclass. 
 
-\subsection{Confusion Matrix}
+\subsection{Confusion Matrix}\label{subsec:conf}
 
 Prior to defining any metric we have to define the concept of confusion matrix. Most of the metrics described can be expressed in terms of it. The confusion matrix is a way of measuring how precise is any method. For a binary classification problem one has positive (1) and negative (0) classes. If the model correctly predicts the positive or negative class it is called true positive and true negative. Then, if the model incorrectly predicts positive it is called false positive and if it infers negative wrongly it is denoted by false negative. Confusion matrices are typically expressed as shown below.
 
@@ -63,7 +63,9 @@ Prior to defining any metric we have to define the concept of confusion matrix. 
 \label{table:confusion_matrix}
 \end{table}
 
-For more than two classes sometimes an adaptation is made. Instead of adding more rows and columns the matrix is built considering one class against all the others. In that case several confusion matrices are needed. Of course, one can also create a bigger confusion matrix as follows
+On our specific problem the true positives are the tumoural cells that are correctly predicted as tumoural, true negatives are healthy cells rightly classified as so and false positives or negatives are misclassifications of cells in one way or another. However, there is one nuance needed to take into account. It may be possible that one cell is not predicted or that the model predicts more cells than there really are. For that reason we will only be considering those cells that are in the ground truth and in the prediction at the same time. This means that it is needed to create a 1-1 correspondence between real and predicted cells. This correspondence is created by distance. Two cells are considered a pairing if the former is the closest to the latter, and the latter is the closest to the former. Ignoring cells that do not belong to such pairings is not a problem because we are interested in improving the classification of already predicted cells, not on improving the segmentation itself. Nonetheless, we can also evaluate the performance on the missing cells by including the background as a new class.
+
+To deal with such multiclass scenarios an adaptation is needed. Instead of adding more rows and columns the matrix is built considering one class against all the others. In that case several confusion matrices are needed. Of course, one can also create a bigger confusion matrix as follows
 
 \begin{table}[ht]
 \centering
@@ -206,7 +208,7 @@ False positives and true negatives depend on the threshold selected. Using $0.5$
 
 \begin{figure}[ht]
     \centering
-    \includegraphics[width=\textwidth]{imgs/auc.png}
+    \includegraphics[width=0.6\textwidth]{imgs/auc.png}
     \caption{Example of a ROC curve.}
     \label{fig:auc}
 \end{figure}
@@ -219,7 +221,7 @@ To finish this section, I'll cover a different way of evaluating classifiers. No
 
 \begin{figure}[ht]
     \centering
-    \includegraphics[width=\textwidth]{imgs/rel.png}
+    \includegraphics[width=0.6\textwidth]{imgs/rel.png}
     \caption{Example of a reliability diagram.}
     \label{fig:rel}
 \end{figure}
@@ -233,11 +235,11 @@ More specifically, predicted probability is quantised. The x axis represents the
     \label{fig:hov_rel}
 \end{figure}
 
-Reliability diagrams can be converted into a metric in the same way the ROC was made a metric by using the area under it. Here, instead of the area under the curve, the area between the model curve and a perfectly calibrated curve is taken. Furthermore, since points in that diagram can represent sets of arbitrary size the area of each bin is weighted by the number of samples in it. Where now we are calling the points bins, since in fact, each point has a width that represents the range of probabilities it takes into account. A more appropriate visualisation is on \autoref{fig:rel2}\footnote{Image taken from \url{https://github.com/EFS-OpenSource/calibration-framework/issues/17} Accessed 15th May 2023}. The metric derived is called Expected Calibration Error (ECE).
+Reliability diagrams can be converted into a metric in the same way the ROC was made a metric by using the area under it. Here, instead of the area under the curve, the area between the model curve and a perfectly calibrated curve is taken. Furthermore, since points in that diagram can represent sets of arbitrary size the area of each bin is weighted by the number of samples in it. Where now we are calling the points bins, since in fact, each point has a width that represents the range of probabilities it takes into account. A more appropriate visualisation is on \autoref{fig:rel2}\footnote{Image taken from \url{https://github.com/EFS-OpenSource/calibration-framework/issues/17} Accessed 15th May 2023} since it also shows the differences between the real and predicted probability which is what is used for computing the metric. The mean of the absolute value of the differences showed in that figure is called Expected Calibration Error (ECE).
 
 \begin{figure}[ht]
     \centering
-    \includegraphics[width=\textwidth]{imgs/rel2.png}
+    \includegraphics[width=0.6\textwidth]{imgs/rel2.png}
     \caption{Another way of representing a reliability diagram. The blue colour is the real probability of a class in that group. The two red colours denote the difference with respect to the optimally calibrated classifier. The difference can be by lack or by excess, that is why there are two colours. The darker one means the real probability is higher than the predicted one. And the lighter one means the predicted probability is lower than what it should be.}
     \label{fig:rel2}
 \end{figure}
