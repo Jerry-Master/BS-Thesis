@@ -58,3 +58,315 @@ The XGBoost method requires a little trick. Although XGBoost also uses softmax f
 The trickiest method to adapt is HoVerNet. Having soft labels does not affect neither the HV branch nor the NP branch but it does affect the NC branch. That branch is trained using the softmax and the dice loss. The first one is quite easy to adapt as described for the graph neural networks. However, the dice loss requires more thinking. In Zifu Wang et al. \cite{wang2023dice} they propose a way of extending the dice loss for soft labels with promising results. On a more technical and practical level, modifying the codebase to support this metric is too much of a hurdle given the expected benefits. But it is interesting on a theoretical perspective to know of the existence of such possibility. In the future, when it becomes a more refined technique with wider support on the main libraries, it may be a good way of training better models.
 
 \chapter{Hyperparameter study}\label{chap:hyper}
+
+Instead of showing the losses here which would be pretty useless since there are 32 configurations per dataset and for each configuration we track 5 or 6 metrics. That much information cannot be shown in a non-interactive way. Therefore, we provide public links to the tensorboard logs with all the training and validation metrics for every configuration. This way you can see how every configuration evolved in time and filter by hyperparameters. The naming convention is as follows. The first letters are either GCN or ATT meaning graph convolution of attention. Then, the next number is the number of layer, after that is the dropout value and then whether or not it used batch normalisation. So, ATT\_10\_0.3\_bn means graph attention with 10 layers and 30\% of dropout with batch normalisation. The links are below, if you do not see anything it may be because you need to select some configurations in the left bar.
+
+\begin{itemize}
+    \item DigiPatics lung: \url{https://tensorboard.dev/experiment/HVSvkl8LQyuNWIWw4dgNmg/} 
+    \item DigiPatics breast: \url{https://tensorboard.dev/experiment/cQoaRA5GRZSEdYh3ijuPmw/}
+    \item CoNSeP: \url{https://tensorboard.dev/experiment/Zb6YbBWWSO6q17DdMEVtZw/}
+    \item MoNuSAC: \url{https://tensorboard.dev/experiment/rfvi7c48Q7CEU7yNvdxEGg/}
+\end{itemize}
+
+I am also providing links to the tensorboard logs of every void gnn experiment. For DigiPatics lung:
+
+\begin{itemize}
+    \item Probabilities: \url{https://tensorboard.dev/experiment/3Q9pt4KlSvWiv6xAeEE3cA/}
+    \item Morphological: \url{https://tensorboard.dev/experiment/hgMqRfVbRr2XWs0xKmX2sQ/}
+    \item Void: \url{https://tensorboard.dev/experiment/Ko52fAFqTRyKXwqXRQx4gQ/}
+\end{itemize}
+
+\noindent For DigiPatics breast:
+
+\begin{itemize}
+    \item Probabilities: \url{https://tensorboard.dev/experiment/tVB2jfeWR4yWuolpKaEBFg/}
+    \item Morphological: \url{https://tensorboard.dev/experiment/o1QXFlsMSPGo6zmVNY7f1g/}
+    \item Void: \url{https://tensorboard.dev/experiment/IMC4U8y9R7KXzwaJMlm2Qg/}
+\end{itemize}
+
+\noindent For CoNSeP:
+
+\begin{itemize}
+    \item Probabilities: \url{https://tensorboard.dev/experiment/uRu2tXp0Rr6HKVJ7bend0w/}
+    \item Morphological: \url{https://tensorboard.dev/experiment/tBlaEjlqRJyTq5NfMGMWEg/}
+    \item Void: \url{https://tensorboard.dev/experiment/aKsWfarRTYmw1CGyZY37RA/}
+\end{itemize}
+
+\noindent For MoNuSAC:
+
+\begin{itemize}
+    \item Probabilities: \url{https://tensorboard.dev/experiment/EPvvFnj1SGC5AgE7geJmRA/}
+    \item Morphological: \url{https://tensorboard.dev/experiment/gS9WVXkHQTapbAZNT2lOjQ/}
+    \item Void: \url{https://tensorboard.dev/experiment/e6lLbjeZRwCO4Avz2Ar03A/}
+\end{itemize}
+
+\noindent The best configuration of hyperparameters for each dataset can be found on \autoref{tab:E} and the test metrics of every configuration are presented in the remaining tables of this appendix. Keep in mind that these metrics are on the test set and provided only for curious readers. They were never used in the selection of the model nor configuration since we only used the validation set for that. In fact, you can see that the best metrics here are not always the same as the metrics presented. Also for curious readers, more tensorboard links are provided from the training of Hovernet below. Tensorboard dev does not support image visualisation so, even though I have image logs they cannot be shared easily. If you are interested on them, feel free to email me for it. Here, 00 is the first phase of the training where the encoder was frozen and 01 is the second phase of training which was done after 00 and had the encoder unfrozen.
+
+\begin{itemize}
+    \item DigiPatics lung: \url{https://tensorboard.dev/experiment/Ah3wt2t9Tl6ArIQ1qqGXDQ/}
+    \item DigiPatics breast: \url{https://tensorboard.dev/experiment/W416onQiQbaAkWpplkm4TA/}
+    \item CoNSeP: \url{https://tensorboard.dev/experiment/vcz3QWa2SouqvqYOGpVpXg/}
+    \item MoNuSAC: \url{https://tensorboard.dev/experiment/3g6kp9xmTa6a6jKcxUAJcw/}
+\end{itemize}
+
+The main takeaway from all this information is that there is no golden rule. Do not try to find any pattern, there is not any. Sometimes more layers is better, sometimes is not. Sometimes dropout works sometimes it does not. You always need to optimise for those hyperparameters since every problem is different and no intuition can be obtained from empirical data about the behaviour of those hyperparameters. If you want better results you are forced to use more compute power.
+
+\begin{table}[ht]
+    \centering
+    \caption{Best hyperparameter configurations.}
+    \begin{tabular}{|c|c|c|c|}
+    \hline
+    Dataset & \#Layers & Dropout & Batch Normalisation\\ \hline
+       DigiPatics lung  & 5 & 0.9 & Yes \\ \hline
+       DigiPatics breast  & 1 & 0.6 & Yes \\ \hline
+       CoNSeP  & 1 & 0.0 & Yes \\ \hline
+       MoNuSAC  & 15 & 0.3 & No \\ \hline
+    \end{tabular}
+    \label{tab:E}
+\end{table}
+
+\begin{table}[ht]
+    \centering
+    \caption{Graph convolution hyperparameter optimization on DigiPatics lung.}
+\begin{tabular}{|c|c|c|c|c|c|c|c|}
+\hline
+F1 & Acc & AUC & \%ERR & ECE & \#Layers & Dropout & Norm type\\ \hline
+62.77\% & 82.67\% & 84.94\% & 6.96\% & 0.0711 & 1 & 0.0 & bn\\ \hline
+69.44\% & 83.53\% & 90.06\% & 0.38\% & 0.0646 & 1 & 0.0 & None\\ \hline
+61.95\% & 82.55\% & 87.01\% & 7.64\% & 0.0761 & 1 & 0.3 & bn\\ \hline
+68.54\% & 84.13\% & \textbf{90.44\%} & 3.06\% & \textbf{0.0415} & 1 & 0.3 & None\\ \hline
+63.00\% & 82.63\% & 88.05\% & 6.56\% & 0.0810 & 1 & 0.6 & bn\\ \hline
+68.04\% & 83.23\% & 89.97\% & 1.04\% & 0.0593 & 1 & 0.6 & None\\ \hline
+65.46\% & 83.15\% & 88.41\% & 4.72\% & 0.0544 & 1 & 0.9 & bn\\ \hline
+66.94\% & 83.75\% & 89.89\% & 4.36\% & 0.0504 & 1 & 0.9 & None\\ \hline
+62.83\% & 82.67\% & 86.84\% & 6.88\% & 0.0601 & 5 & 0.0 & bn\\ \hline
+64.78\% & 83.03\% & 87.29\% & 5.32\% & 0.0902 & 5 & 0.0 & None\\ \hline
+62.87\% & 82.63\% & 83.14\% & 6.72\% & 0.0746 & 5 & 0.3 & bn\\ \hline
+64.21\% & 83.09\% & 87.43\% & 6.26\% & 0.0870 & 5 & 0.3 & None\\ \hline
+63.74\% & 82.97\% & 85.23\% & 6.54\% & 0.0622 & 5 & 0.6 & bn\\ \hline
+64.87\% & 83.33\% & 87.56\% & 6.06\% & 0.0951 & 5 & 0.6 & None\\ \hline
+66.53\% & 83.27\% & 86.84\% & 3.52\% & 0.0884 & 5 & 0.9 & bn\\ \hline
+66.43\% & 83.29\% & 88.50\% & 3.74\% & 0.1117 & 5 & 0.9 & None\\ \hline
+56.93\% & 81.59\% & 86.89\% & 10.77\% & 0.0596 & 10 & 0.0 & bn\\ \hline
+66.75\% & 83.63\% & 87.10\% & 4.28\% & 0.0873 & 10 & 0.0 & None\\ \hline
+63.77\% & 82.81\% & 85.40\% & 6.06\% & 0.0451 & 10 & 0.3 & bn\\ \hline
+67.15\% & 83.67\% & 86.78\% & 3.80\% & 0.0907 & 10 & 0.3 & None\\ \hline
+66.48\% & 83.31\% & 86.34\% & 3.72\% & 0.0828 & 10 & 0.6 & bn\\ \hline
+65.55\% & 83.13\% & 86.28\% & 4.54\% & 0.0924 & 10 & 0.6 & None\\ \hline
+65.73\% & 83.35\% & 86.69\% & 4.92\% & 0.0846 & 10 & 0.9 & bn\\ \hline
+71.42\% & 84.27\% & 86.95\% & 1.52\% & 0.1190 & 10 & 0.9 & None\\ \hline
+66.06\% & 83.71\% & 89.08\% & 5.52\% & 0.0439 & 15 & 0.0 & bn\\ \hline
+71.31\% & 84.57\% & 86.82\% & \textbf{0.26\%} & 0.0663 & 15 & 0.0 & None\\ \hline
+57.77\% & 81.83\% & 81.31\% & 10.49\% & 0.0563 & 15 & 0.3 & bn\\ \hline
+69.03\% & 84.27\% & 86.83\% & 2.72\% & 0.0612 & 15 & 0.3 & None\\ \hline
+67.36\% & 83.07\% & 85.58\% & 1.64\% & 0.0686 & 15 & 0.6 & bn\\ \hline
+68.74\% & 83.87\% & 86.79\% & 1.92\% & 0.0972 & 15 & 0.6 & None\\ \hline
+70.74\% & \textbf{84.75\%} & 86.89\% & 1.40\% & 0.0842 & 15 & 0.9 & bn\\ \hline
+\textbf{73.50\%} & 84.59\% & 87.66\% & 4.64\% & 0.1351 & 15 & 0.9 & None\\ \hline
+\end{tabular}
+\end{table}
+
+\begin{table}[ht]
+    \centering
+    \caption{Graph attention hyperparameter optimization on DigiPatics lung.}
+\begin{tabular}{|c|c|c|c|c|c|c|c|}
+\hline
+F1 & Acc & AUC & \%ERR & ECE & \#Layers & Dropout & Norm type\\ \hline
+56.81\% & 81.59\% & 84.26\% & 10.89\% & 0.0356 & 1 & 0.0 & bn\\ \hline
+61.03\% & 82.37\% & 90.23\% & 8.26\% & 0.0910 & 1 & 0.0 & None\\ \hline
+60.63\% & 82.43\% & 86.74\% & 8.89\% & 0.0795 & 1 & 0.3 & bn\\ \hline
+55.89\% & 81.49\% & 89.34\% & 11.55\% & 0.0982 & 1 & 0.3 & None\\ \hline
+64.28\% & 83.03\% & 88.51\% & 6.00\% & 0.1065 & 1 & 0.6 & bn\\ \hline
+65.02\% & 83.03\% & 89.35\% & 5.00\% & 0.0817 & 1 & 0.6 & None\\ \hline
+3.67\% & 73.74\% & 88.90\% & 26.26\% & 0.1446 & 1 & 0.9 & bn\\ \hline
+41.83\% & 78.63\% & 86.76\% & 16.77\% & 0.1009 & 1 & 0.9 & None\\ \hline
+59.73\% & 82.11\% & 85.68\% & 9.09\% & 0.0548 & 5 & 0.0 & bn\\ \hline
+63.85\% & 82.87\% & 87.43\% & 6.12\% & 0.1014 & 5 & 0.0 & None\\ \hline
+47.42\% & 80.25\% & 87.61\% & 15.95\% & 0.1143 & 5 & 0.3 & bn\\ \hline
+67.32\% & 83.97\% & 87.78\% & 4.46\% & 0.1376 & 5 & 0.3 & None\\ \hline
+67.84\% & 84.29\% & \textbf{91.34\%} & 4.66\% & 0.1086 & 5 & 0.6 & bn\\ \hline
+68.88\% & 83.71\% & 89.21\% & 1.16\% & 0.1233 & 5 & 0.6 & None\\ \hline
+0.00\% & 73.24\% & 76.25\% & 26.76\% & \textbf{0.0171} & 5 & 0.9 & bn\\ \hline
+0.00\% & 73.24\% & 39.62\% & 26.76\% & 0.2574 & 5 & 0.9 & None\\ \hline
+53.42\% & 80.95\% & 89.55\% & 12.61\% & 0.1048 & 10 & 0.0 & bn\\ \hline
+55.01\% & 81.77\% & 86.10\% & 12.99\% & 0.1321 & 10 & 0.0 & None\\ \hline
+68.69\% & 84.09\% & 89.74\% & 2.70\% & 0.0499 & 10 & 0.3 & bn\\ \hline
+67.44\% & 83.63\% & 90.76\% & 3.24\% & 0.0791 & 10 & 0.3 & None\\ \hline
+0.00\% & 73.24\% & 89.37\% & 26.76\% & 0.0914 & 10 & 0.6 & bn\\ \hline
+0.00\% & 73.24\% & 31.83\% & 26.76\% & 0.2673 & 10 & 0.6 & None\\ \hline
+0.00\% & 73.24\% & 50.00\% & 26.76\% & 0.1027 & 10 & 0.9 & bn\\ \hline
+0.00\% & 73.24\% & 37.30\% & 26.76\% & 0.2674 & 10 & 0.9 & None\\ \hline
+71.79\% & 84.57\% & 89.85\% & 1.18\% & 0.0526 & 15 & 0.0 & bn\\ \hline
+71.71\% & \textbf{84.87\%} & 89.95\% & \textbf{0.04\%} & 0.0863 & 15 & 0.0 & None\\ \hline
+67.23\% & 84.51\% & 89.59\% & 6.24\% & 0.0727 & 15 & 0.3 & bn\\ \hline
+\textbf{73.56\%} & 84.69\% & 89.90\% & 4.38\% & 0.0750 & 15 & 0.3 & None\\ \hline
+0.00\% & 73.24\% & 75.87\% & 26.76\% & 0.0691 & 15 & 0.6 & bn\\ \hline
+11.18\% & 60.58\% & 39.72\% & 9.13\% & 0.2755 & 15 & 0.6 & None\\ \hline
+0.00\% & 73.24\% & 54.20\% & 26.76\% & 0.0490 & 15 & 0.9 & bn\\ \hline
+0.00\% & 73.24\% & 22.17\% & 26.76\% & 0.2676 & 15 & 0.9 & None\\ \hline
+\end{tabular}
+\end{table}
+
+\begin{table}[ht]
+    \centering
+    \caption{Graph convolution hyperparameter optimization on DigiPatics breast.}
+\begin{tabular}{|c|c|c|c|c|c|c|}
+\hline
+Micro F1 & Macro F1 & Weighted F1 & ECE & \#Layers & Dropout & Norm type\\ \hline
+70.56\% & 41.00\% & 70.63\% & 0.2542 & 1 & 0.0 & bn\\ \hline
+68.57\% & 41.16\% & 68.07\% & 0.2712 & 1 & 0.0 & None\\ \hline
+68.84\% & 40.92\% & 68.72\% & 0.2674 & 1 & 0.3 & bn\\ \hline
+\textbf{70.62\%} & 42.32\% & 70.52\% & 0.2565 & 1 & 0.3 & None\\ \hline
+70.47\% & 42.53\% & 71.13\% & 0.2501 & 1 & 0.6 & bn\\ \hline
+70.61\% & \textbf{42.81\%} & \textbf{71.87\%} & 0.2694 & 1 & 0.6 & None\\ \hline
+69.35\% & 41.50\% & 69.37\% & 0.2587 & 1 & 0.9 & bn\\ \hline
+70.04\% & 42.26\% & 70.13\% & 0.2571 & 1 & 0.9 & None\\ \hline
+61.34\% & 41.90\% & 59.75\% & 0.2816 & 5 & 0.0 & bn\\ \hline
+61.94\% & 41.87\% & 60.57\% & 0.2891 & 5 & 0.0 & None\\ \hline
+55.93\% & 34.51\% & 54.45\% & 0.3007 & 5 & 0.3 & bn\\ \hline
+55.42\% & 37.74\% & 53.37\% & 0.3143 & 5 & 0.3 & None\\ \hline
+62.31\% & 42.61\% & 62.76\% & 0.2798 & 5 & 0.6 & bn\\ \hline
+53.93\% & 34.59\% & 52.27\% & 0.3183 & 5 & 0.6 & None\\ \hline
+69.40\% & 34.25\% & 67.53\% & \textbf{0.2423} & 5 & 0.9 & bn\\ \hline
+61.47\% & 42.49\% & 61.90\% & 0.2881 & 5 & 0.9 & None\\ \hline
+51.30\% & 29.90\% & 46.98\% & 0.3230 & 10 & 0.0 & bn\\ \hline
+54.86\% & 34.87\% & 53.42\% & 0.3051 & 10 & 0.0 & None\\ \hline
+51.57\% & 35.26\% & 50.82\% & 0.3037 & 10 & 0.3 & bn\\ \hline
+55.64\% & 34.09\% & 54.02\% & 0.3004 & 10 & 0.3 & None\\ \hline
+56.13\% & 37.90\% & 56.80\% & 0.2877 & 10 & 0.6 & bn\\ \hline
+53.83\% & 32.87\% & 53.88\% & 0.3157 & 10 & 0.6 & None\\ \hline
+65.87\% & 35.59\% & 62.88\% & 0.2681 & 10 & 0.9 & bn\\ \hline
+65.58\% & 35.72\% & 62.66\% & 0.2938 & 10 & 0.9 & None\\ \hline
+54.70\% & 36.89\% & 52.84\% & 0.2831 & 15 & 0.0 & bn\\ \hline
+49.67\% & 31.46\% & 47.47\% & 0.3174 & 15 & 0.0 & None\\ \hline
+57.22\% & 36.64\% & 55.77\% & 0.2797 & 15 & 0.3 & bn\\ \hline
+54.38\% & 33.52\% & 54.51\% & 0.3062 & 15 & 0.3 & None\\ \hline
+49.15\% & 29.97\% & 46.72\% & 0.3226 & 15 & 0.6 & bn\\ \hline
+51.00\% & 31.14\% & 50.70\% & 0.3064 & 15 & 0.6 & None\\ \hline
+64.98\% & 34.08\% & 61.82\% & 0.2581 & 15 & 0.9 & bn\\ \hline
+64.20\% & 33.50\% & 60.95\% & 0.3143 & 15 & 0.9 & None\\ \hline
+\end{tabular}
+\end{table}
+
+\begin{table}[ht]
+    \centering
+    \caption{Graph attention hyperparameter optimization on DigiPatics breast.}
+\begin{tabular}{|c|c|c|c|c|c|c|}
+\hline
+Micro F1 & Macro F1 & Weighted F1 & ECE & \#Layers & Dropout & Norm type\\ \hline
+64.57\% & 38.40\% & 65.43\% & 0.2772 & 1 & 0.0 & bn\\ \hline
+61.67\% & 36.83\% & 60.40\% & 0.2867 & 1 & 0.0 & None\\ \hline
+71.38\% & 40.58\% & 70.53\% & 0.2536 & 1 & 0.3 & bn\\ \hline
+64.72\% & 38.37\% & 64.66\% & 0.2740 & 1 & 0.3 & None\\ \hline
+69.49\% & \textbf{41.55\%} & 70.46\% & 0.2751 & 1 & 0.6 & bn\\ \hline
+70.59\% & 41.34\% & 70.82\% & 0.2574 & 1 & 0.6 & None\\ \hline
+44.75\% & 24.36\% & 31.87\% & 0.3307 & 1 & 0.9 & bn\\ \hline
+\textbf{72.16\%} & 39.09\% & \textbf{71.57\%} & 0.2428 & 1 & 0.9 & None\\ \hline
+52.85\% & 38.19\% & 49.38\% & 0.3166 & 5 & 0.0 & bn\\ \hline
+55.56\% & 34.86\% & 52.16\% & 0.3158 & 5 & 0.0 & None\\ \hline
+64.40\% & 37.01\% & 64.90\% & 0.2472 & 5 & 0.3 & bn\\ \hline
+60.73\% & 38.45\% & 60.38\% & 0.2901 & 5 & 0.3 & None\\ \hline
+66.05\% & 32.22\% & 63.85\% & 0.2583 & 5 & 0.6 & bn\\ \hline
+59.78\% & 38.04\% & 55.77\% & 0.3445 & 5 & 0.6 & None\\ \hline
+42.08\% & 14.81\% & 24.92\% & 0.2713 & 5 & 0.9 & bn\\ \hline
+41.92\% & 14.77\% & 24.86\% & 0.3512 & 5 & 0.9 & None\\ \hline
+40.25\% & 18.55\% & 32.70\% & 0.3634 & 10 & 0.0 & bn\\ \hline
+46.88\% & 30.67\% & 44.74\% & 0.3398 & 10 & 0.0 & None\\ \hline
+50.99\% & 27.44\% & 52.42\% & 0.3007 & 10 & 0.3 & bn\\ \hline
+24.88\% & 22.21\% & 33.39\% & 0.4510 & 10 & 0.3 & None\\ \hline
+42.08\% & 14.81\% & 24.92\% & 0.2850 & 10 & 0.6 & bn\\ \hline
+48.18\% & 18.78\% & 35.70\% & 0.3670 & 10 & 0.6 & None\\ \hline
+42.08\% & 14.81\% & 24.92\% & 0.2588 & 10 & 0.9 & bn\\ \hline
+6.60\% & 3.09\% & 0.82\% & 0.5596 & 10 & 0.9 & None\\ \hline
+43.95\% & 28.14\% & 46.56\% & 0.3415 & 15 & 0.0 & bn\\ \hline
+45.56\% & 26.04\% & 41.67\% & 0.3567 & 15 & 0.0 & None\\ \hline
+58.08\% & 27.71\% & 55.01\% & 0.3047 & 15 & 0.3 & bn\\ \hline
+2.61\% & 1.96\% & 4.77\% & \textbf{0.2060} & 15 & 0.3 & None\\ \hline
+42.08\% & 14.81\% & 24.92\% & 0.2838 & 15 & 0.6 & bn\\ \hline
+25.31\% & 11.16\% & 23.68\% & 0.2399 & 15 & 0.6 & None\\ \hline
+42.08\% & 14.81\% & 24.92\% & 0.2670 & 15 & 0.9 & bn\\ \hline
+47.19\% & 19.39\% & 43.47\% & 0.2700 & 15 & 0.9 & None\\ \hline
+\end{tabular}
+\end{table}
+
+\begin{table}[ht]
+    \centering
+    \caption{Graph convolution hyperparameter optimization on CoNSeP.}
+\begin{tabular}{|c|c|c|c|c|c|c|}
+\hline
+Micro F1 & Macro F1 & Weighted F1 & ECE & \#Layers & Dropout & Norm type\\ \hline
+64.31\% & 46.71\% & 61.36\% & 0.0530 & 1 & 0.0 & bn\\ \hline
+63.67\% & 45.25\% & 60.02\% & 0.0419 & 1 & 0.0 & None\\ \hline
+64.17\% & 47.01\% & 61.46\% & 0.0541 & 1 & 0.3 & bn\\ \hline
+63.75\% & 46.39\% & 60.78\% & 0.0394 & 1 & 0.3 & None\\ \hline
+61.74\% & 46.78\% & 59.18\% & 0.0637 & 1 & 0.6 & bn\\ \hline
+\textbf{64.67\%} & \textbf{48.24\%} & \textbf{61.82\%} & 0.0415 & 1 & 0.6 & None\\ \hline
+57.46\% & 26.66\% & 51.03\% & 0.0681 & 1 & 0.9 & bn\\ \hline
+58.98\% & 26.46\% & 52.75\% & \textbf{0.0376} & 1 & 0.9 & None\\ \hline
+62.66\% & 42.05\% & 59.30\% & 0.0544 & 5 & 0.0 & bn\\ \hline
+58.77\% & 39.85\% & 56.42\% & 0.0589 & 5 & 0.0 & None\\ \hline
+58.08\% & 32.41\% & 51.75\% & 0.0759 & 5 & 0.3 & bn\\ \hline
+64.01\% & 46.02\% & 60.56\% & 0.0654 & 5 & 0.3 & None\\ \hline
+46.21\% & 18.21\% & 34.93\% & 0.0879 & 5 & 0.6 & bn\\ \hline
+49.08\% & 32.92\% & 46.46\% & 0.1057 & 5 & 0.6 & None\\ \hline
+31.58\% & 6.86\% & 15.15\% & 0.0960 & 5 & 0.9 & bn\\ \hline
+35.13\% & 15.62\% & 28.62\% & 0.0683 & 5 & 0.9 & None\\ \hline
+45.16\% & 35.88\% & 43.11\% & 0.1235 & 10 & 0.0 & bn\\ \hline
+57.76\% & 38.56\% & 55.33\% & 0.0884 & 10 & 0.0 & None\\ \hline
+61.63\% & 43.54\% & 58.23\% & 0.0562 & 10 & 0.3 & bn\\ \hline
+61.84\% & 42.40\% & 57.42\% & 0.0704 & 10 & 0.3 & None\\ \hline
+21.27\% & 5.01\% & 7.46\% & 0.0758 & 10 & 0.6 & bn\\ \hline
+15.65\% & 5.56\% & 11.84\% & 0.1898 & 10 & 0.6 & None\\ \hline
+21.27\% & 5.01\% & 7.46\% & 0.0812 & 10 & 0.9 & bn\\ \hline
+25.86\% & 9.86\% & 17.46\% & 0.1449 & 10 & 0.9 & None\\ \hline
+29.28\% & 21.74\% & 29.48\% & 0.1663 & 15 & 0.0 & bn\\ \hline
+51.08\% & 38.71\% & 47.74\% & 0.1195 & 15 & 0.0 & None\\ \hline
+55.27\% & 32.16\% & 48.99\% & 0.1047 & 15 & 0.3 & bn\\ \hline
+21.66\% & 12.53\% & 16.38\% & 0.1571 & 15 & 0.3 & None\\ \hline
+21.27\% & 5.01\% & 7.46\% & 0.0660 & 15 & 0.6 & bn\\ \hline
+29.18\% & 6.50\% & 13.40\% & 0.1931 & 15 & 0.6 & None\\ \hline
+31.58\% & 6.86\% & 15.15\% & 0.0883 & 15 & 0.9 & bn\\ \hline
+11.90\% & 5.04\% & 8.82\% & 0.2094 & 15 & 0.9 & None\\ \hline
+\end{tabular}
+\end{table}
+
+\begin{table}[ht]
+    \centering
+    \caption{Graph convolution hyperparameter optimization on MoNuSAC.}
+\begin{tabular}{|c|c|c|c|c|c|c|}
+\hline
+Micro F1 & Macro F1 & Weighted F1 & ECE & \#Layers & Dropout & Norm type\\ \hline
+83.60\% & 72.26\% & 83.67\% & 0.0549 & 1 & 0.0 & bn\\ \hline
+85.48\% & 75.53\% & 85.49\% & 0.0436 & 1 & 0.0 & None\\ \hline
+84.54\% & 74.18\% & 84.62\% & 0.0509 & 1 & 0.3 & bn\\ \hline
+86.67\% & 74.19\% & 86.75\% & 0.0386 & 1 & 0.3 & None\\ \hline
+84.46\% & 75.41\% & 84.42\% & 0.0577 & 1 & 0.6 & bn\\ \hline
+87.21\% & 75.98\% & 87.28\% & 0.0394 & 1 & 0.6 & None\\ \hline
+83.89\% & 74.60\% & 83.92\% & 0.0503 & 1 & 0.9 & bn\\ \hline
+87.32\% & 76.17\% & 87.42\% & 0.0429 & 1 & 0.9 & None\\ \hline
+86.38\% & \textbf{76.62\%} & 86.36\% & 0.0344 & 5 & 0.0 & bn\\ \hline
+84.63\% & 73.59\% & 84.66\% & 0.0436 & 5 & 0.0 & None\\ \hline
+83.59\% & 71.47\% & 83.59\% & 0.0604 & 5 & 0.3 & bn\\ \hline
+84.49\% & 73.06\% & 84.56\% & 0.0436 & 5 & 0.3 & None\\ \hline
+83.53\% & 71.09\% & 83.46\% & 0.0533 & 5 & 0.6 & bn\\ \hline
+84.41\% & 73.95\% & 84.44\% & 0.0446 & 5 & 0.6 & None\\ \hline
+83.92\% & 45.29\% & 82.79\% & 0.0663 & 5 & 0.9 & bn\\ \hline
+84.88\% & 69.20\% & 84.76\% & 0.0511 & 5 & 0.9 & None\\ \hline
+87.11\% & 72.21\% & 87.32\% & 0.0418 & 10 & 0.0 & bn\\ \hline
+87.07\% & 73.01\% & 87.26\% & \textbf{0.0244} & 10 & 0.0 & None\\ \hline
+85.16\% & 74.56\% & 85.23\% & 0.0537 & 10 & 0.3 & bn\\ \hline
+85.44\% & 75.31\% & 85.44\% & 0.0427 & 10 & 0.3 & None\\ \hline
+84.66\% & 70.08\% & 84.67\% & 0.0484 & 10 & 0.6 & bn\\ \hline
+85.95\% & 73.55\% & 86.04\% & 0.0422 & 10 & 0.6 & None\\ \hline
+84.00\% & 42.56\% & 82.75\% & 0.0719 & 10 & 0.9 & bn\\ \hline
+87.90\% & 44.56\% & 86.67\% & 0.0440 & 10 & 0.9 & None\\ \hline
+82.32\% & 68.89\% & 82.44\% & 0.0689 & 15 & 0.0 & bn\\ \hline
+87.11\% & 72.75\% & 87.32\% & 0.0364 & 15 & 0.0 & None\\ \hline
+79.96\% & 63.06\% & 80.48\% & 0.0907 & 15 & 0.3 & bn\\ \hline
+\textbf{88.71\%} & 69.72\% & \textbf{89.05\%} & 0.0251 & 15 & 0.3 & None\\ \hline
+85.39\% & 70.00\% & 85.40\% & 0.0283 & 15 & 0.6 & bn\\ \hline
+88.37\% & 75.00\% & 88.41\% & 0.0400 & 15 & 0.6 & None\\ \hline
+84.25\% & 42.69\% & 82.99\% & 0.0689 & 15 & 0.9 & bn\\ \hline
+87.16\% & 44.19\% & 85.97\% & 0.1254 & 15 & 0.9 & None\\ \hline
+\end{tabular}
+\end{table}
